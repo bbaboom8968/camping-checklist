@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오토캠핑 체크리스트</title>
+<style>
+:root{--bg:#f6f4ee;--card:#fff;--tx:#23302a;--mu:#6b7770;--ac:#2f6b4f;--ac2:#e8f1ec;--bd:#dcd8cc;--wn:#b4541f;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171c19;--card:#202723;--tx:#e7ece8;--mu:#91a097;--ac:#6fc298;--ac2:#27352d;--bd:#33403a;--wn:#e59a68}}
+:root[data-theme="dark"]{--bg:#171c19;--card:#202723;--tx:#e7ece8;--mu:#91a097;--ac:#6fc298;--ac2:#27352d;--bd:#33403a;--wn:#e59a68}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:8px 0 4px}h2{font-size:16px;margin:0 0 8px}h3{font-size:13px;color:var(--mu);margin:12px 0 2px}
+.sub{color:var(--mu);font-size:14px;margin:0 0 14px}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tabs button{flex:1;padding:10px 4px;border:1px solid var(--bd);background:var(--card);color:var(--mu);border-radius:10px;font:inherit;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:12px}
+.sec{font-size:17px;font-weight:700;margin:18px 0 8px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:7px 12px;border:1px solid var(--bd);border-radius:20px;background:var(--card);color:var(--tx);font:inherit;font-size:14px;cursor:pointer}
+.chip.on{background:var(--ac2);border-color:var(--ac);color:var(--ac);font-weight:600}
+.num{display:flex;align-items:center;gap:10px}
+.num button{width:34px;height:34px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:18px;cursor:pointer}
+.num.sm button{width:30px;height:30px;font-size:16px}
+.num b{min-width:24px;text-align:center}
+.it{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bd)}
+.it:last-child{border:0}
+label.it{cursor:pointer;justify-content:flex-start;align-items:flex-start}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--ac);flex:none;margin-top:2px}
+.nt{color:var(--mu);font-size:13px}
+.done .n{text-decoration:line-through;color:var(--mu)}
+.big{width:100%;padding:13px;border:0;border-radius:12px;background:var(--ac);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.ghost{background:none;border:1px solid var(--bd);color:var(--mu);padding:8px 12px;border-radius:10px;font:inherit;font-size:13px;cursor:pointer}
+.bar{height:8px;background:var(--ac2);border-radius:4px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;background:var(--ac);transition:width .2s}
+.buy{color:var(--wn)}.tools{display:flex;gap:8px;margin-bottom:10px}
+.add{display:grid;grid-template-columns:1fr 90px 70px;gap:6px;margin-bottom:8px}
+input[type=text],input[type=number],select{padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;min-width:0}
+.q{display:inline-block;background:var(--ac2);color:var(--ac);border-radius:10px;padding:0 8px;font-size:12px;font-weight:700;margin-left:4px}
+.x{border:0;background:none;color:var(--mu);font-size:18px;cursor:pointer}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0}.hh input[type=text]{flex:1;min-width:110px}
+.ing{display:grid;grid-template-columns:1fr 74px 104px 28px;gap:6px;margin:6px 0;align-items:center}
+.row input[type=text],.row input[type=date],.row select{max-width:62%;flex:1}
+a.lnk{display:block;text-decoration:none;color:var(--tx)}a.nt{display:inline-block;text-decoration:none;margin-bottom:4px}
+details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;padding:4px 0}details .it{padding-left:10px}
+.tabs button{font-size:12px;padding:9px 2px}
+.dish{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;margin-bottom:8px}
+</style></head><body><main>
+<h1>⛺ 오토캠핑 체크리스트</h1>
+<p class="sub">캠핑 계획 → 식단·재료 → 장비 조율 → 가정별 체크리스트까지, 모임이 함께 정리해요.</p>
+<div class="tabs" id="tabs"></div>
+<div id="view"></div>
+</main>
+<script>
+var D=`H|숙영|텐트(팩·폴 포함)
+H|숙영|그라운드시트
+H|숙영|팩 망치
+H|숙영|여분 팩·로프
+H|숙영|이너 매트(에어·인슐)|h
+H|숙영|침낭·이불|h|nowin
+H|숙영|동계 침낭|h|win
+H|숙영|방한 매트(은박·폼)|h|win
+H|숙영|베개|h
+H|숙영|무릎담요|h|mid
+H|숙영|가정 전용 타프·그늘막
+H|가구|캠핑 의자|h
+H|가구|가정용 테이블
+H|가구|돗자리·러그
+H|가구|아이 하이체어|1|k7
+H|조명|가정용 랜턴
+H|조명|헤드랜턴|a
+H|조명|손전등
+H|주방|가정용 쿨러
+H|주방|버너
+H|주방|코펠·냄비
+H|주방|프라이팬
+H|주방|식기(그릇·접시)|e
+H|주방|수저·젓가락|e
+H|주방|컵·머그|h
+H|주방|보온병·텀블러
+H|주방|칼·도마
+H|주방|가위·집게·국자
+H|주방|설거지 세트(세제·수세미·통)
+H|주방|행주·키친타월
+H|주방|물통(워터저그)
+H|주방|음식 보관용기|2
+H|주방|보냉팩|2
+H|위생|수건|h
+H|위생|칫솔·치약|h
+H|위생|세면도구(샴푸·바디워시)
+H|위생|물티슈·휴지|2
+H|위생|상비약·밴드
+H|위생|손소독제
+H|위생|샤워용품(슬리퍼·비치타월)
+H|위생|선크림·모기기피제|1|sum
+H|의류|속옷|hn
+H|의류|양말|hn
+H|의류|잠옷|h
+H|의류|여벌 겉옷|h
+H|의류|바람막이|h|mid
+H|의류|방한복·패딩|h|win
+H|의류|방한 양말·장갑·목도리|h|win
+H|의류|우비|h
+H|의류|반팔·반바지 여벌|h|sum
+H|의류|수영복·모자|h|sum
+H|의류|슬리퍼·샌들|h
+H|의류|여벌 신발|h
+H|아이|장난감·놀이도구|1|kid
+H|아이|아이 상비약(해열제 등)|1|kid
+H|아이|아이 우비·장화|1|kid
+H|아이|물놀이(튜브·물총)|1|kid&sum
+H|아이|아이 담요·애착인형|1|k7
+H|아이|유모차·웨건|1|k7
+H|아이|아기띠|1|k7
+H|전기|멀티탭|1|pow
+H|전기|릴선|1|pow
+H|전기|충전기·보조배터리|a
+H|전기|전기장판|1|win&pow
+H|전기|선풍기·서큘레이터|1|sum&pow
+H|난방|난로 + 일산화탄소 경보기|1|win
+H|난방|핫팩|hn|win
+H|여름|모기향·모기장|1|sum
+H|여름|쿨매트·쿨타올|h|sum
+H|여름|부채·휴대용 선풍기|1|sum
+H|반려견|리드줄·하네스|1|pet
+H|반려견|배변봉투·패드|1|pet
+H|반려견|물그릇·밥그릇|1|pet
+H|반려견|방석·텐트|1|pet
+C|그늘·숙영|메인 타프(리빙쉘)
+C|그늘·숙영|타프 폴·스트링·팩
+C|그늘·숙영|스크린 타프·방충망|1|sum
+C|그늘·숙영|방수포·여분 천
+C|그늘·숙영|샤워·화장실 텐트|1|sum
+C|가구|메인 테이블
+C|가구|주방 선반·테이블
+C|가구|공용 의자·벤치|2
+C|조명|메인 랜턴·랜턴 스탠드
+C|조명|감성 조명(줄조명)
+C|취사|대형 쿨러(공용)
+C|취사|공용 버너·가스 어댑터
+C|취사|대형 코펠·솥|1|m:찌개/라면
+C|취사|전기밥솥|1|m:밥&pow
+C|취사|무쇠솥·코펠 밥솥|1|m:밥&nopow
+C|취사|전기포트|1|pow
+C|취사|주전자·드립 세트|1|m:커피
+C|취사|그릴·불판|1|m:고기
+C|취사|숯불 화로·그릴|1|m:고기
+C|취사|토치·착화 도구|1|m:고기
+C|취사|숯집게·고기 집게|1|m:고기
+C|취사|토스터·샌드위치 메이커|1|m:아침빵&pow
+C|취사|에어프라이어|1|m:술안주&pow
+C|취사|와인잔·오프너|1|m:술안주
+C|취사|병따개·캔따개
+C|불멍|화로대|1|m:불멍
+C|불멍|방화포·재받이|1|m:불멍
+C|불멍|장작 집게·부젓가락|1|m:불멍
+C|불멍|화로 장갑|1|m:불멍
+C|불멍|장작 바구니·도끼|1|m:불멍
+C|전기|대용량 파워뱅크·파워스테이션|1|nopow
+C|전기|공용 멀티탭·릴선|1|pow
+C|난방|대형 난로(공용)|1|win
+C|난방|결로 방지 수건·제습제|1|win
+C|난방|스틸팩·큰 망치|1|win
+C|여름|대형 선풍기·서큘레이터|1|sum&pow
+C|여름|모기향·훈증기|2|sum
+C|여름|물놀이 풀장·펌프|1|sum&kid
+C|놀이|보드게임·카드
+C|놀이|배드민턴·캐치볼 세트
+C|놀이|블루투스 스피커
+C|놀이|빔프로젝터·스크린
+C|놀이|놀이 텐트·볼풀|1|kid
+C|공구|멀티툴·니퍼
+C|공구|여분 로프·노끈·테이프
+C|공구|빗자루·쓰레받기
+C|공구|공용 쓰레기통·봉투 걸이
+C|공구|구급상자(공용)
+C|공구|해충 퇴치 스프레이|1|sum
+C|공구|작은 삽
+C|공구|웨건·카트
+C|공구|대형 워터저그(20L)
+C|공구|여분 건전지·충전 케이블`;
+var CD=`C|고기|삼겹살·목살|m:고기|meat
+C|고기|쌈채소·깻잎|m:고기
+C|고기|쌈장·마늘·고추|m:고기
+C|고기|숯|m:고기
+C|고기|착화제·가스 토치용 가스|m:고기
+C|고기|소금·후추·기름장|m:고기
+C|찌개/라면|라면|m:찌개/라면
+C|찌개/라면|찌개 재료(두부·애호박·고기)|m:찌개/라면
+C|찌개/라면|김치|m:찌개/라면
+C|찌개/라면|대파·양파·마늘|m:찌개/라면
+C|밥|쌀 또는 햇반|m:밥|rice
+C|밥|김·밑반찬|m:밥
+C|커피|원두·필터|m:커피
+C|커피|우유·설탕·스틱커피|m:커피
+C|불멍|장작|m:불멍|wood
+C|불멍|마시멜로·고구마|m:불멍
+C|아침빵|식빵·잼·버터|m:아침빵
+C|아침빵|계란·소시지·베이컨|m:아침빵
+C|아침빵|우유·시리얼|m:아침빵
+C|술안주|맥주·와인·소주|m:술안주
+C|술안주|안주(치즈·과일·견과)|m:술안주
+C|술안주|얼음|m:술안주
+C|공통|부탄가스||gas
+C|공통|식용유·소금·후추·설탕
+C|공통|종이컵·종이호일·알루미늄호일
+C|공통|지퍼백·랩·키친타월
+C|공통|분리수거·쓰레기 봉투
+C|공통|얼음·보냉팩|sum
+H|공통|생수·음료||water
+H|공통|간식(과자·과일)
+H|아이|아이 간식·주스|kid
+H|영유아|이유식·분유·기저귀|k7
+H|반려견|사료·간식|pet`;
+var G=D.split('\n').map(function(l){var p=l.split('|');return{sc:p[0],c:p[1],n:p[2],q:p[3]||'1',k:p[4]||''}});
+var CN=CD.split('\n').map(function(l){var p=l.split('|');return{sc:p[0],c:p[1],n:p[2],k:p[3]||'',z:p[4]||''}});
+var MENUS=['고기','찌개/라면','밥','커피','불멍','아침빵','술안주'],SEAS=['봄','여름','가을','겨울'],SC={H:'🏠 가정별 (각 가정이 준비)',C:'🤝 공용 (모임이 나눠서 준비)'};
+var db,camps=[],listReady=false,CID=null,camp=null,hhs=[],meals=[],subs=[],tab=0,pend=false,filt=0,open={},Q={},err='',slow=false;
+var V=document.getElementById('view'),T=document.getElementById('tabs');
+var h=function(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var F=function(n){return n%1?n.toFixed(1):n},ks=function(n){return n.replace(/[.\/\[\]*~`]/g,'_')},u4=function(){return Math.random().toString(36).slice(2,8)};
+var val=function(i){var e=document.getElementById(i);return e?e.value.trim():''};
+var sum=function(f){return hhs.reduce(function(a,x){return a+(x[f]||0)},0)};
+function by(arr,f){var o={},ks=[];arr.forEach(function(x){var k=f(x);if(!o[k]){o[k]=[];ks.push(k)}o[k].push(x)});return ks.map(function(k){return[k,o[k]]})}
+var mk=function(d){return Object.assign({id:d.id},d.data())},eh=function(e){err='데이터를 불러오지 못했어요: '+e.message;rr()};
+var cref=function(){return db.doc('camps/'+CID)},href=function(id){return db.doc('camps/'+CID+'/hh/'+id)},mref=function(id){return db.doc('camps/'+CID+'/meals/'+id)};
+function qq(ref,fn){var p=ref.path;Q[p]=(Q[p]||Promise.resolve()).then(fn).catch(function(e){err='저장 실패: '+(e&&e.message||e)+' · 공유 설정에서 편집 권한을 확인해 주세요';rr()})}
+function upd(ref,data){qq(ref,function(){return ref.update(data)})}
+function me(){var id=null;try{id=localStorage.getItem('cme_'+CID)}catch(e){}return hhs.filter(function(x){return x.id==id})[0]||hhs[0]||null}
+var ml=function(m){return m.day?m.day+'일차 '+m.slot:'공통'};
+function dl(d){if(!camp.start)return'';var t=new Date(camp.start+'T00:00:00');t.setDate(t.getDate()+d-1);return' · '+(t.getMonth()+1)+'/'+t.getDate()+'('+'일월화수목금토'[t.getDay()]+')'}
+var dz=function(m){return m.dishes||[{id:'d0',name:m.menu||'',types:m.types||[],ings:m.ings||[]}]};
+function mset(){var s={};meals.forEach(function(m){dz(m).forEach(function(d){(d.types||[]).forEach(function(t){s[t]=1})})});return s}
+function okc(k){if(!k)return true;var ms=mset();return k.split('&').every(function(t){return t=='pow'?camp.power:t=='nopow'?!camp.power:t=='sum'?camp.season=='여름':t=='win'?camp.season=='겨울':t=='nowin'?camp.season!='겨울':t=='mid'?(camp.season=='봄'||camp.season=='가을'):t=='kid'?(camp.kids||sum('small')>0):t=='k7'?sum('small')>0:t=='pet'?!!camp.pet:t.indexOf('m:')==0?!!ms[t.slice(2)]:true})}
+function items(){var a=G.filter(function(g){return okc(g.k)}).map(function(g){return{key:ks(g.n),n:g.n,sc:g.sc,c:g.c,q:g.q,k:g.k}});(camp.customs||[]).forEach(function(c){a.push({key:'x'+c.id,n:c.n,sc:c.sc,c:'직접 추가',q:String(c.q),k:''})});return a}
+function need(g,x){var A,K;if(g.sc=='H'){A=x.adults;K=x.small}else{A=sum('adults');K=sum('small')}var q=g.q,p=A+K;return q=='h'?p:q=='e'?Math.ceil(A+K/2):q=='a'?A:q=='hn'?p*camp.nights:+q}
+function uses(g){var ts=g.k.split('&').filter(function(t){return t.indexOf('m:')==0}).map(function(t){return t.slice(2)});if(!ts.length)return['항상'];var r=[];meals.forEach(function(m){if(m.day&&dz(m).some(function(d){return (d.types||[]).some(function(t){return ts.indexOf(t)>-1})}))r.push(ml(m))});return r.length?r:['항상']}
+function step(a,k,v,x){return '<div class="num sm"><button data-a="'+a+'" data-k="'+h(k)+'" '+(x||'')+' data-d="-1">−</button><b>'+v+'</b><button data-a="'+a+'" data-k="'+h(k)+'" '+(x||'')+' data-d="1">+</button></div>'}
+function opts(arr,sel){return arr.map(function(a){return '<option value="'+a[0]+'" '+(a[0]==sel?'selected':'')+'>'+h(a[1])+'</option>'}).join('')}
+function selMe(){var m=me();return '<div class="row"><span>내 가정</span><select data-c="me">'+opts(hhs.map(function(x){return[x.id,x.name]}),m&&m.id)+'</select></div>'}
+var noHH='<div class="card">먼저 ① 계획 탭에서 가정을 등록해 주세요.</div>';
+function vList(){var o='<div class="card"><h2>새 캠핑 만들기</h2><div class="row"><span>이름</span><input type="text" id="nn" placeholder="예: 11월 가을캠핑"></div><div class="row"><span>장소</span><input type="text" id="np" placeholder="캠핑장 이름"></div><div class="row"><span>출발일</span><input type="date" id="ns"></div><div class="row"><span>몇 박</span><input type="number" id="nd" value="1" min="1" max="10" style="width:80px"></div><div class="row"><span>계절</span><select id="se">'+opts(SEAS.map(function(s){return[s,s]}),'가을')+'</select></div><div class="row"><span>사이트</span><select id="pw"><option value="1">전기 O</option><option value="0">전기 X</option></select></div><button class="big" data-a="create">만들기</button><div class="nt" style="margin-top:6px">끼니 칸은 박수에 맞춰 자동으로 만들어져요. (박수는 만든 뒤 바꿀 수 없어요)</div></div>';
+o+='<div class="sec">우리 캠핑 목록</div>';if(!listReady)return o+'<p class="nt">불러오는 중…</p>';
+return o+(camps.length?camps.map(function(c){return '<a class="card lnk" href="#c-'+c.id+'"><b>'+h(c.name)+'</b><div class="nt">'+h(c.place||'장소 미정')+' · '+c.nights+'박'+(c.start?' · '+c.start:'')+'</div></a>'}).join(''):'<p class="nt">아직 만든 캠핑이 없어요.</p>')}
+async function create(){var nt=Math.max(1,Math.min(10,+val('nd')||1)),id='k'+Date.now().toString(36)+u4(),r=db.doc('camps/'+id);
+try{await r.set({name:val('nn')||'새 캠핑',place:val('np'),start:val('ns'),nights:nt,season:val('se'),power:val('pw')=='1',pet:false,kids:false,customs:[],ord:Date.now()});
+for(var d=1;d<=nt+1;d++){var sl=d==1?['저녁']:d==nt+1?['아침','점심']:['아침','점심','저녁'];for(var i=0;i<sl.length;i++)await r.collection('meals').doc().set({day:d,slot:sl[i],dishes:[{id:u4(),name:'',types:[],ings:[]}],ord:d*10+['아침','점심','저녁'].indexOf(sl[i])})}
+await r.collection('meals').doc('common').set({day:0,slot:'공통',ord:-1,dishes:[{id:'c0',name:'',types:[],ings:CN.filter(function(c){return c.sc=='C'&&c.c=='공통'&&(!c.k||c.k=='sum')}).map(function(c){return{id:u4(),n:c.n,q:'',who:''}})}]});
+location.hash='c-'+id}catch(e){err='만들지 못했어요: '+e.message+' · 편집 권한을 확인해 주세요';rr()}}
+function vPlan(){var A=sum('adults'),K=sum('small');
+var o='<div class="card"><h2>⛺ 캠핑 정보</h2><div class="row"><span>이름</span><input type="text" data-c="camp" data-f="name" value="'+h(camp.name)+'"></div><div class="row"><span>장소</span><input type="text" data-c="camp" data-f="place" value="'+h(camp.place||'')+'"></div><div class="row"><span>출발일</span><input type="date" data-c="camp" data-f="start" value="'+h(camp.start||'')+'"></div><div class="row"><span>기간</span><b>'+camp.nights+'박 '+(camp.nights+1)+'일</b></div><div class="row"><span>계절</span><select data-c="camp" data-f="season">'+opts(SEAS.map(function(s){return[s,s]}),camp.season)+'</select></div><div class="row"><span>사이트</span><select data-c="camp" data-f="power">'+opts([['1','전기 O'],['0','전기 X']],camp.power?'1':'0')+'</select></div><div class="row"><span>8세 이상 아이 동반</span><select data-c="camp" data-f="kids">'+opts([['0','아니오'],['1','예']],camp.kids?'1':'0')+'</select></div><div class="row"><span>반려견</span><select data-c="camp" data-f="pet">'+opts([['0','아니오'],['1','예']],camp.pet?'1':'0')+'</select></div>'+
+'<div class="row"><input type="text" readonly value="'+h(location.href)+'"><button class="ghost" data-a="copy">링크 복사</button></div><div class="nt">같은 링크로 모임원이 들어와 함께 편집해요. (공유 설정에서 편집 권한 필요)</div></div>';
+o+='<div class="card"><h2>👨‍👩‍👧 참가 가정 (총 '+(A+K)+'명 · '+F(A+K/2)+'인분)</h2><div class="nt">7세 이하는 2명을 1인분으로 계산해요.</div>'+(hhs.length?hhs.map(function(x){return '<div class="hh"><input type="text" data-c="hhn" data-id="'+x.id+'" value="'+h(x.name)+'"><span class="nt">성인·8세↑</span>'+step('hh',x.id,x.adults,'data-f="adults" data-id="'+x.id+'"').replace(/data-k="[^"]*"/g,'')+'<span class="nt">7세↓</span>'+step('hh',x.id,x.small,'data-f="small" data-id="'+x.id+'"').replace(/data-k="[^"]*"/g,'')+'<button class="x" data-a="hhdel" data-id="'+x.id+'">✕</button></div>'}).join(''):'<p class="nt">참가 가정을 추가해 주세요.</p>')+
+'<h3>가정 추가</h3><div class="hh"><input type="text" id="hn" placeholder="가정 이름 (예: 민수네)"><input type="number" id="ha" value="2" min="1" style="width:60px"><input type="number" id="hs" value="0" min="0" style="width:60px"></div><div class="nt">성인·8세 이상 / 7세 이하 순서</div><button class="big" data-a="hhadd">추가</button></div>';
+return o}
+function dishCard(m,d,multi){var k=m.id+'-'+d.id,o='<div class="dish">';
+if(m.day){o+='<div class="hh"><input type="text" data-c="menu" data-m="'+m.id+'" data-x="'+d.id+'" value="'+h(d.name||'')+'" placeholder="메뉴 이름 (예: 삼겹살)">'+(multi?'<button class="x" data-a="dishdel" data-m="'+m.id+'" data-x="'+d.id+'">✕</button>':'')+'</div><div class="chips">'+MENUS.map(function(t){return '<button class="chip '+((d.types||[]).indexOf(t)>-1?'on':'')+'" data-a="type" data-m="'+m.id+'" data-x="'+d.id+'" data-v="'+t+'">'+t+'</button>'}).join('')+'</div><div class="nt">요리 종류를 고르면 필요한 장비가 자동으로 정해져요.</div>'}
+o+='<h3>재료</h3>'+(d.ings||[]).map(function(i){var a='data-m="'+m.id+'" data-x="'+d.id+'" data-i="'+i.id+'"';return '<div class="ing"><input type="text" data-c="ing" data-f="n" '+a+' value="'+h(i.n)+'"><input type="text" data-c="ing" data-f="q" '+a+' value="'+h(i.q||'')+'" placeholder="수량"><select data-c="ing" data-f="who" '+a+'><option value="">담당 미정</option>'+opts(hhs.map(function(x){return[x.id,x.name]}),i.who)+'</select><button class="x" data-a="ingdel" '+a+'>✕</button></div>'}).join('');
+o+='<div class="ing"><input type="text" id="in-'+k+'" placeholder="재료 추가"><input type="text" id="iq-'+k+'" placeholder="수량"><button class="ghost" data-a="ingadd" data-m="'+m.id+'" data-x="'+d.id+'">추가</button></div>';
+if((d.types||[]).length)o+='<button class="ghost" style="margin-top:8px" data-a="sug" data-m="'+m.id+'" data-x="'+d.id+'">추천 재료 넣기</button>';
+o+='<h3>필요한 장비</h3>'+(d.gear||[]).map(function(i){var a='data-m="'+m.id+'" data-x="'+d.id+'" data-i="'+i.id+'"';return '<div class="ing"><input type="text" data-c="gear" data-f="n" '+a+' value="'+h(i.n)+'"><input type="text" data-c="gear" data-f="q" '+a+' value="'+h(i.q||'')+'" placeholder="개수"><select data-c="gear" data-f="who" '+a+'><option value="">담당 미정</option>'+opts(hhs.map(function(x){return[x.id,x.name]}),i.who)+'</select><button class="x" data-a="gdel" '+a+'>✕</button></div>'}).join('')+'<div class="ing"><input type="text" id="gn-'+k+'" placeholder="장비 추가 (예: 그릴, 집게)"><input type="text" id="gq-'+k+'" placeholder="개수"><button class="ghost" data-a="gadd" data-m="'+m.id+'" data-x="'+d.id+'">추가</button></div>';
+return o+'</div>'}
+function mealCard(m){var ds=dz(m),o='<div class="card"><h2>'+(m.day?m.slot:'공통 소모품')+'</h2>'+ds.map(function(d){return dishCard(m,d,m.day&&ds.length>1)}).join('');
+if(m.day)o+='<button class="ghost" data-a="dishadd" data-m="'+m.id+'">➕ 메뉴 추가</button>';return o+'</div>'}
+function vMeals(){var o='',cd=0,cm=null;meals.forEach(function(m){if(!m.day){cm=m;return}if(m.day!=cd){cd=m.day;o+='<div class="sec">'+cd+'일차'+dl(cd)+'</div>'}o+=mealCard(m)});return o+(cm?'<div class="sec">공통 소모품 (항상)</div>'+mealCard(cm):'')}
+function vGear(){var m=me();if(!m)return noHH;var o=selMe()+'<div class="card"><h2>➕ 준비물 직접 추가</h2><div class="ing"><input type="text" id="cn" placeholder="이름"><select id="cs"><option value="H">가정별</option><option value="C">공용</option></select><input type="number" id="cq" value="1" min="1"><button class="ghost" data-a="custadd">추가</button></div>'+(camp.customs||[]).map(function(c){return '<div class="it"><span>'+h(c.n)+' <span class="nt">'+(c.sc=='H'?'가정별':'공용')+' · 필요 '+c.q+'</span></span><button class="x" data-a="custdel" data-k="'+c.id+'">✕</button></div>'}).join('')+'</div><p class="sub">'+h(m.name)+'이(가) 가진 장비 개수를 입력하세요. 필요한 개수는 인원·계절·메뉴로 자동 계산돼요.</p>';
+var it=items();['H','C'].forEach(function(sc){o+='<div class="sec">'+SC[sc]+'</div>';by(it.filter(function(g){return g.sc==sc}),function(g){return g.c}).forEach(function(e){o+='<div class="card"><h2>'+e[0]+'</h2>'+e[1].map(function(g){var nd=need(g,m),ow=(m.own||{})[g.key]||0;return '<div class="it"><span>'+h(g.n)+' <span class="nt">'+(sc=='C'?'모임 ':'')+'필요 '+nd+'</span>'+(ow>=nd?' ✅':'')+'</span>'+step('own',g.key,ow)+'</div>'}).join('')+'</div>'})});return o}
+function vCoord(){if(!hhs.length)return noHH;var it=items().filter(function(g){return g.sc=='C'}),rows=it.map(function(g){var nd=need(g,hhs[0]),t=hhs.reduce(function(a,x){return a+((x.bring||{})[g.key]||0)},0);return{g:g,nd:nd,t:t}});
+var gap=rows.filter(function(r){return r.t<r.nd}).length;
+var o='<p class="sub">공용 장비를 누가 몇 개 가져갈지 정해요. 항목을 눌러 가정별 보유와 가져갈 개수를 조절하세요.</p><div class="chips" style="margin-bottom:10px"><button class="chip '+(filt==0?'on':'')+'" data-a="filt" data-v="0">전체 ('+rows.length+')</button><button class="chip '+(filt==1?'on':'')+'" data-a="filt" data-v="1">부족만 ('+gap+')</button></div>';
+by(rows.filter(function(r){return !filt||r.t<r.nd}),function(r){return r.g.c}).forEach(function(e){o+='<div class="card"><h2>'+e[0]+'</h2>'+e[1].map(function(r){var g=r.g;return '<details data-k="'+g.key+'" '+(open[g.key]?'open':'')+'><summary>'+h(g.n)+' <span class="q">'+r.t+'/'+r.nd+'</span> '+(r.t>=r.nd?'✅':'<span class="buy">⚠ '+(r.nd-r.t)+'개 부족</span>')+'</summary>'+hhs.map(function(x){return '<div class="it"><span>'+h(x.name)+' <span class="nt">보유 '+((x.own||{})[g.key]||0)+'</span></span>'+step('bring',g.key,(x.bring||{})[g.key]||0,'data-h="'+x.id+'"')+'</div>'}).join('')+'</details>'}).join('')+'</div>'});
+return o+(rows.length?'':'<p class="nt">공용 장비가 없어요.</p>')}
+function vCheck(){var m=me();if(!m)return noHH;var E=[],buy=[],gaps=[],un=[],ug=[];
+items().forEach(function(g){var nd=need(g,m),ow=(m.own||{})[g.key]||0;if(g.sc=='H'){if(ow>0)E.push({u:uses(g)[0],t:g.n,x:'×'+Math.min(ow,nd)+(ow<nd?' · 부족 '+(nd-ow):''),key:'h_'+g.key});if(ow<nd)buy.push(g.n+' '+(nd-ow)+'개')}else{var b=(m.bring||{})[g.key]||0;if(b>0)E.push({u:uses(g)[0],t:g.n,x:'공용 ×'+b,key:'c_'+g.key});var t=hhs.reduce(function(a,x){return a+((x.bring||{})[g.key]||0)},0);if(t<need(g,m))gaps.push(g.n+' '+(need(g,m)-t)+'개')}});
+meals.forEach(function(ms){dz(ms).forEach(function(d){(d.gear||[]).forEach(function(i){var lb=ms.day?ml(ms):'항상';if(i.who==m.id)E.push({u:lb,t:i.n,x:(d.name?d.name+' · ':'')+(i.q?'×'+i.q:''),key:'e_'+i.id});else if(!i.who)ug.push(lb+(d.name?' '+d.name:'')+': '+i.n)});(d.ings||[]).forEach(function(i){if(i.who==m.id)E.push({u:ms.day?ml(ms):'항상',t:i.n,x:(d.name?d.name+' · ':'')+(i.q||''),key:'i_'+i.id,r:1});else if(!i.who)un.push((ms.day?ml(ms)+(d.name?' '+d.name:'')+': ':'공통: ')+i.n)})})});
+var mm=Math.ceil((m.adults+m.small/2)*camp.nights*1.5);CN.filter(function(c){return c.sc=='H'&&okc(c.k)}).forEach(function(c){E.push({u:'항상',t:c.n,x:c.z=='water'?mm+'L 정도':'',key:'s_'+ks(c.n),r:1})});
+var order=['항상'].concat(meals.filter(function(x){return x.day}).map(ml)),tot=E.length,dn=E.filter(function(e){return (m.packed||{})[e.key]}).length,pc=tot?Math.round(dn/tot*100):0;
+var o=selMe()+'<div class="card"><b>'+h(m.name)+' 체크리스트 ('+dn+'/'+tot+')</b><div class="bar"><i style="width:'+pc+'%"></i></div><div class="nt">사용 시기별로 묶어서 챙기면 짐을 풀기 편해요.</div></div>';
+order.forEach(function(u){var l=E.filter(function(e){return e.u==u});if(!l.length)return;o+='<div class="card"><h2>'+(u=='항상'?'📦 항상 쓰는 것':'🕒 '+u+' 때 쓰는 것')+'</h2>'+l.map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x||'')+(e.r?' · 재료·소모품':'')+'</span></span></label>'}).join('')+'</div>'});
+function lst(t,a,c){return '<div class="card"><h2 class="'+(c||'')+'">'+t+' ('+a.length+')</h2>'+(a.length?a.map(function(x){return '<div class="it"><span>• '+h(x)+'</span></div>'}).join(''):'<p class="nt">없어요 👍</p>')+'</div>'}
+return o+'<div class="sec buy">🛒 정리</div>'+lst('우리 가정이 사야 할 장비',buy,'buy')+lst('공용 장비 중 아직 담당이 없는 것 (조율 필요)',gaps,'buy')+lst('메뉴별 장비 담당 미정',ug,'buy')+lst('재료 담당 미정',un,'buy')}
+function render(){T.innerHTML='';var o='';
+if(db===undefined){V.innerHTML='<p class="sub">연결 중…</p>';return}
+if(!db){V.innerHTML='<div class="card">공유 저장소를 쓸 수 없어요. claude.ai에 로그인한 상태에서 편집 권한을 받은 뒤 다시 열어 주세요.</div>';return}
+if(err)o+='<div class="card buy">'+h(err)+'</div>';
+if(!CID){V.innerHTML=o+vList();return}
+if(camp===null){V.innerHTML=o+'<a class="nt" href="#">← 캠핑 목록</a><p class="sub">불러오는 중…'+(slow?' (연결이 느려요)':'')+'</p>';return}
+if(camp===false){V.innerHTML=o+'<a class="nt" href="#">← 캠핑 목록</a><div class="card">캠핑을 찾을 수 없어요.</div>';return}
+T.innerHTML=['① 계획','② 식단','③ 내 장비','④ 공용 조율','⑤ 체크리스트'].map(function(n,i){return '<button class="'+(tab==i?'on':'')+'" data-a="tab" data-v="'+i+'">'+n+'</button>'}).join('');
+var y=window.scrollY;V.innerHTML=o+'<a class="nt" href="#">← 캠핑 목록</a><div class="sec" style="margin-top:4px">'+h(camp.name)+'</div>'+[vPlan,vMeals,vGear,vCoord,vCheck][tab]();window.scrollTo(0,y)}
+function rr(){var a=document.activeElement;if(a&&V.contains(a)&&/INPUT|SELECT/.test(a.tagName)&&a.type!='checkbox'){pend=true;return}render()}
+function act(e){var b=e.target.closest('[data-a]');if(!b||!db)return;var d=b.dataset,a=d.a,m,x,r,arr;
+if(a=='tab'){tab=+d.v;render();window.scrollTo(0,0)}
+else if(a=='create')create();
+else if(a=='copy'){try{navigator.clipboard.writeText(location.href)}catch(z){}b.textContent='복사됨'}
+else if(a=='hhadd'){r=db.collection('camps/'+CID+'/hh').doc();qq(r,function(){return r.set({name:val('hn')||'우리 가정',adults:Math.max(1,+val('ha')||2),small:Math.max(0,+val('hs')||0),own:{},bring:{},packed:{},ord:Date.now()})})}
+else if(a=='hh'){x=hhs.filter(function(y){return y.id==d.id})[0];var u={};u[d.f]=Math.max(d.f=='adults'?1:0,Math.min(30,(x[d.f]||0)+ +d.d));upd(href(d.id),u)}
+else if(a=='hhdel'){if(confirm('이 가정을 삭제할까요?')){r=href(d.id);qq(r,function(){return r.delete()})}}
+else if(a=='type'||a=='ingadd'||a=='ingdel'||a=='sug'||a=='gadd'||a=='gdel'||a=='dishadd'||a=='dishdel'){m=meals.filter(function(y){return y.id==d.m})[0];var ds=JSON.parse(JSON.stringify(dz(m))),dd=ds.filter(function(y){return y.id==d.x})[0];
+if(a=='type'){dd.types=dd.types||[];var ti=dd.types.indexOf(d.v);ti>-1?dd.types.splice(ti,1):dd.types.push(d.v)}
+else if(a=='ingadd'){var n=val('in-'+d.m+'-'+d.x);if(!n)return;dd.ings=(dd.ings||[]).concat([{id:u4(),n:n,q:val('iq-'+d.m+'-'+d.x),who:''}])}
+else if(a=='ingdel')dd.ings=dd.ings.filter(function(i){return i.id!=d.i});
+else if(a=='sug'){var ex=(dd.ings||[]).map(function(i){return i.n});dd.ings=(dd.ings||[]).concat(CN.filter(function(c){return c.sc=='C'&&(dd.types||[]).indexOf(c.c)>-1&&ex.indexOf(c.n)<0}).map(function(c){return{id:u4(),n:c.n,q:'',who:''}}))}
+else if(a=='gadd'){var gn=val('gn-'+d.m+'-'+d.x);if(!gn)return;dd.gear=(dd.gear||[]).concat([{id:u4(),n:gn,q:val('gq-'+d.m+'-'+d.x),who:''}])}
+else if(a=='gdel')dd.gear=(dd.gear||[]).filter(function(i){return i.id!=d.i});
+else if(a=='dishadd')ds.push({id:u4(),name:'',types:[],ings:[]});
+else if(a=='dishdel'){if(!confirm('이 메뉴를 삭제할까요?'))return;ds=ds.filter(function(y){return y.id!=d.x})}
+upd(mref(m.id),{dishes:ds,menu:'',types:[],ings:[]})}
+else if(a=='own'||a=='bring'){x=a=='own'?me():hhs.filter(function(y){return y.id==d.h})[0];var f=a=='own'?'own':'bring',o2={},c=(x[f]||{})[d.k]||0;o2[d.k]=Math.max(0,Math.min(99,c+ +d.d));var w={};w[f]=o2;upd(href(x.id),w)}
+else if(a=='custadd'){var nm=val('cn');if(!nm)return;upd(cref(),{customs:(camp.customs||[]).concat([{id:u4(),n:nm,sc:val('cs'),q:Math.max(1,+val('cq')||1)}])})}
+else if(a=='custdel')upd(cref(),{customs:camp.customs.filter(function(c){return c.id!=d.k})});
+else if(a=='filt'){filt=+d.v;render()}}
+function chg(e){var t=e.target,c=t.dataset.c;if(!c||!db)return;var v=t.type=='checkbox'?t.checked:t.value,u={},m;
+if(c=='camp'){var f=t.dataset.f;u[f]=(f=='power'||f=='pet'||f=='kids')?v=='1':v;upd(cref(),u)}
+else if(c=='hhn')upd(href(t.dataset.id),{name:v.trim()||'가정'});
+else if(c=='menu'||c=='ing'||c=='gear'){m=meals.filter(function(y){return y.id==t.dataset.m})[0];var ds=JSON.parse(JSON.stringify(dz(m))),dd=ds.filter(function(y){return y.id==t.dataset.x})[0];
+var fl=c=='gear'?'gear':'ings';if(c=='menu')dd.name=v.trim();else dd[fl]=(dd[fl]||[]).map(function(i){if(i.id==t.dataset.i)i[t.dataset.f]=v.trim();return i});
+upd(mref(m.id),{dishes:ds,menu:'',types:[],ings:[]})}
+else if(c=='me'){try{localStorage.setItem('cme_'+CID,v)}catch(z){}render()}
+else if(c=='pack'){var p={};p[t.dataset.k]=v;upd(href(me().id),{packed:p})}}
+function route(){var m=/^#c-([A-Za-z0-9]+)$/.exec(location.hash);subs.forEach(function(f){f()});subs=[];CID=null;camp=null;hhs=[];meals=[];slow=false;
+if(m&&db){CID=m[1];tab=0;var r=db.doc('camps/'+CID);subs=[r.onSnapshot(function(s){camp=s.exists?s.data():false;rr()},eh),r.collection('hh').orderBy('ord').onSnapshot(function(s){hhs=s.docs.map(mk);rr()},eh),r.collection('meals').orderBy('ord').onSnapshot(function(s){meals=s.docs.map(mk);rr()},eh)];setTimeout(function(){if(camp===null){slow=true;rr()}},10000)}
+render();window.scrollTo(0,0)}
+V.addEventListener('click',act);T.addEventListener('click',act);V.addEventListener('change',chg);
+V.addEventListener('focusout',function(){if(pend){pend=false;setTimeout(rr,100)}});
+V.addEventListener('toggle',function(e){var d=e.target;if(d.tagName=='DETAILS')open[d.dataset.k]=d.open},true);
+window.addEventListener('hashchange',route);
+(async function(){render();try{db=await window.claude.use('db')}catch(e){db=null}
+if(db){db.collection('camps').orderBy('ord','desc').onSnapshot(function(s){camps=s.docs.map(mk);listReady=true;rr()},eh);route()}else render()})();
+</script></body></html>
