@@ -54,7 +54,27 @@ details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;p
 <div class="tabs" id="tabs"></div>
 <div id="view"></div>
 </main>
-<script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getFirestore,doc,collection,setDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,FieldPath} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+// ▼▼▼ Firebase 콘솔에서 복사한 설정값을 여기에 붙여 넣으세요 ▼▼▼
+const FIREBASE_CONFIG={
+  apiKey:'AIzaSyBGOsIorRqtXy13yAhcqA-Z2RifgBWPDe8',
+  authDomain:'camping-a9317.firebaseapp.com',
+  projectId:'camping-a9317',
+  storageBucket:'camping-a9317.firebasestorage.app',
+  messagingSenderId:'896265218687',
+  appId:'1:896265218687:web:99f59f839dd04cd023ed4a'
+};
+// ▲▲▲ 여기까지 ▲▲▲
+// Firestore를 앱 코드가 쓰는 형태로 맞춰 주는 어댑터
+var isObj=function(v){return v&&typeof v=='object'&&!Array.isArray(v)};
+function wrapDoc(r){return{path:r.path,id:r.id,
+set:function(d){return setDoc(r,d)},delete:function(){return deleteDoc(r)},
+update:function(d){var a=[];Object.keys(d).forEach(function(k){var v=d[k];if(isObj(v)&&Object.keys(v).length)Object.keys(v).forEach(function(x){a.push(new FieldPath(k,x),v[x])});else a.push(k,v)});return updateDoc(r,...a)},
+onSnapshot:function(f,e){return onSnapshot(r,function(s){f({exists:s.exists(),data:function(){return s.data()},id:s.id})},e)},
+collection:function(p){return wrapCol(collection(r,p))}}}
+function wrapCol(c){return{doc:function(id){return wrapDoc(id?doc(c,id):doc(c))},orderBy:function(f,d){return{onSnapshot:function(cb,e){return onSnapshot(query(c,orderBy(f,d||'asc')),cb,e)}}}}}
 var D=`H|숙영|텐트(팩·폴 포함)
 H|숙영|그라운드시트
 H|숙영|팩 망치
@@ -227,7 +247,7 @@ var sum=function(f){return hhs.reduce(function(a,x){return a+(x[f]||0)},0)};
 function by(arr,f){var o={},ks=[];arr.forEach(function(x){var k=f(x);if(!o[k]){o[k]=[];ks.push(k)}o[k].push(x)});return ks.map(function(k){return[k,o[k]]})}
 var mk=function(d){return Object.assign({id:d.id},d.data())},eh=function(e){err='데이터를 불러오지 못했어요: '+e.message;rr()};
 var cref=function(){return db.doc('camps/'+CID)},href=function(id){return db.doc('camps/'+CID+'/hh/'+id)},mref=function(id){return db.doc('camps/'+CID+'/meals/'+id)};
-function qq(ref,fn){var p=ref.path;Q[p]=(Q[p]||Promise.resolve()).then(fn).catch(function(e){err='저장 실패: '+(e&&e.message||e)+' · 공유 설정에서 편집 권한을 확인해 주세요';rr()})}
+function qq(ref,fn){var p=ref.path;Q[p]=(Q[p]||Promise.resolve()).then(fn).catch(function(e){err='저장 실패: '+(e&&e.message||e)+' · 인터넷 연결과 Firestore 규칙을 확인해 주세요';rr()})}
 function upd(ref,data){qq(ref,function(){return ref.update(data)})}
 function me(){var id=null;try{id=localStorage.getItem('cme_'+CID)}catch(e){}return hhs.filter(function(x){return x.id==id})[0]||hhs[0]||null}
 var ml=function(m){return m.day?m.day+'일차 '+m.slot:'공통'};
@@ -249,10 +269,10 @@ async function create(){var nt=Math.max(1,Math.min(10,+val('nd')||1)),id='k'+Dat
 try{await r.set({name:val('nn')||'새 캠핑',place:val('np'),start:val('ns'),nights:nt,season:val('se'),power:val('pw')=='1',pet:false,kids:false,customs:[],ord:Date.now()});
 for(var d=1;d<=nt+1;d++){var sl=d==1?['저녁']:d==nt+1?['아침','점심']:['아침','점심','저녁'];for(var i=0;i<sl.length;i++)await r.collection('meals').doc().set({day:d,slot:sl[i],dishes:[{id:u4(),name:'',types:[],ings:[]}],ord:d*10+['아침','점심','저녁'].indexOf(sl[i])})}
 await r.collection('meals').doc('common').set({day:0,slot:'공통',ord:-1,dishes:[{id:'c0',name:'',types:[],ings:CN.filter(function(c){return c.sc=='C'&&c.c=='공통'&&(!c.k||c.k=='sum')}).map(function(c){return{id:u4(),n:c.n,q:'',who:''}})}]});
-location.hash='c-'+id}catch(e){err='만들지 못했어요: '+e.message+' · 편집 권한을 확인해 주세요';rr()}}
+location.hash='c-'+id}catch(e){err='만들지 못했어요: '+e.message+' · 인터넷 연결과 Firestore 규칙을 확인해 주세요';rr()}}
 function vPlan(){var A=sum('adults'),K=sum('small');
 var o='<div class="card"><h2>⛺ 캠핑 정보</h2><div class="row"><span>이름</span><input type="text" data-c="camp" data-f="name" value="'+h(camp.name)+'"></div><div class="row"><span>장소</span><input type="text" data-c="camp" data-f="place" value="'+h(camp.place||'')+'"></div><div class="row"><span>출발일</span><input type="date" data-c="camp" data-f="start" value="'+h(camp.start||'')+'"></div><div class="row"><span>기간</span><b>'+camp.nights+'박 '+(camp.nights+1)+'일</b></div><div class="row"><span>계절</span><select data-c="camp" data-f="season">'+opts(SEAS.map(function(s){return[s,s]}),camp.season)+'</select></div><div class="row"><span>사이트</span><select data-c="camp" data-f="power">'+opts([['1','전기 O'],['0','전기 X']],camp.power?'1':'0')+'</select></div><div class="row"><span>8세 이상 아이 동반</span><select data-c="camp" data-f="kids">'+opts([['0','아니오'],['1','예']],camp.kids?'1':'0')+'</select></div><div class="row"><span>반려견</span><select data-c="camp" data-f="pet">'+opts([['0','아니오'],['1','예']],camp.pet?'1':'0')+'</select></div>'+
-'<div class="row"><input type="text" readonly value="'+h(location.href)+'"><button class="ghost" data-a="copy">링크 복사</button></div><div class="nt">같은 링크로 모임원이 들어와 함께 편집해요. (공유 설정에서 편집 권한 필요)</div></div>';
+'<div class="row"><input type="text" readonly value="'+h(location.href)+'"><button class="ghost" data-a="copy">링크 복사</button></div><div class="nt">같은 링크로 모임원이 들어와 함께 편집해요.</div></div>';
 o+='<div class="card"><h2>👨‍👩‍👧 참가 가정 (총 '+(A+K)+'명 · '+F(A+K/2)+'인분)</h2><div class="nt">7세 이하는 2명을 1인분으로 계산해요.</div>'+(hhs.length?hhs.map(function(x){return '<div class="hh"><input type="text" data-c="hhn" data-id="'+x.id+'" value="'+h(x.name)+'"><span class="nt">성인·8세↑</span>'+step('hh',x.id,x.adults,'data-f="adults" data-id="'+x.id+'"').replace(/data-k="[^"]*"/g,'')+'<span class="nt">7세↓</span>'+step('hh',x.id,x.small,'data-f="small" data-id="'+x.id+'"').replace(/data-k="[^"]*"/g,'')+'<button class="x" data-a="hhdel" data-id="'+x.id+'">✕</button></div>'}).join(''):'<p class="nt">참가 가정을 추가해 주세요.</p>')+
 '<h3>가정 추가</h3><div class="hh"><input type="text" id="hn" placeholder="가정 이름 (예: 민수네)"><input type="number" id="ha" value="2" min="1" style="width:60px"><input type="number" id="hs" value="0" min="0" style="width:60px"></div><div class="nt">성인·8세 이상 / 7세 이하 순서</div><button class="big" data-a="hhadd">추가</button></div>';
 return o}
@@ -284,7 +304,7 @@ function lst(t,a,c){return '<div class="card"><h2 class="'+(c||'')+'">'+t+' ('+a
 return o+'<div class="sec buy">🛒 정리</div>'+lst('우리 가정이 사야 할 장비',buy,'buy')+lst('공용 장비 중 아직 담당이 없는 것 (조율 필요)',gaps,'buy')+lst('메뉴별 장비 담당 미정',ug,'buy')+lst('재료 담당 미정',un,'buy')}
 function render(){T.innerHTML='';var o='';
 if(db===undefined){V.innerHTML='<p class="sub">연결 중…</p>';return}
-if(!db){V.innerHTML='<div class="card">공유 저장소를 쓸 수 없어요. claude.ai에 로그인한 상태에서 편집 권한을 받은 뒤 다시 열어 주세요.</div>';return}
+if(!db){V.innerHTML='<div class="card">Firebase 설정이 비어 있거나 잘못됐어요. index.html 위쪽의 FIREBASE_CONFIG에 Firebase 설정값을 붙여 넣어 주세요.</div>';return}
 if(err)o+='<div class="card buy">'+h(err)+'</div>';
 if(!CID){V.innerHTML=o+vList();return}
 if(camp===null){V.innerHTML=o+'<a class="nt" href="#">← 캠핑 목록</a><p class="sub">불러오는 중…'+(slow?' (연결이 느려요)':'')+'</p>';return}
@@ -328,6 +348,6 @@ V.addEventListener('click',act);T.addEventListener('click',act);V.addEventListen
 V.addEventListener('focusout',function(){if(pend){pend=false;setTimeout(rr,100)}});
 V.addEventListener('toggle',function(e){var d=e.target;if(d.tagName=='DETAILS')open[d.dataset.k]=d.open},true);
 window.addEventListener('hashchange',route);
-(async function(){render();try{db=await window.claude.use('db')}catch(e){db=null}
+(async function(){render();try{if(!FIREBASE_CONFIG.projectId)throw 0;var fs=getFirestore(initializeApp(FIREBASE_CONFIG));db={doc:function(p){return wrapDoc(doc(fs,p))},collection:function(p){return wrapCol(collection(fs,p))}}}catch(e){db=null}
 if(db){db.collection('camps').orderBy('ord','desc').onSnapshot(function(s){camps=s.docs.map(mk);listReady=true;rr()},eh);route()}else render()})();
 </script></body></html>
