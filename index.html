@@ -55,6 +55,13 @@ details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;p
 .memo2{grid-column:1/3;font-size:13px}.grpsel{grid-column:3/5;min-width:0}.ent.add .grpsel{grid-column:1/-1}
 .ent.grp{grid-template-columns:1fr 92px 30px}.ent.grp.add{grid-template-columns:1fr 92px 56px}
 .buyck{grid-column:3/5;font-size:13px;display:flex;align-items:center;gap:4px;white-space:nowrap}.buyck.full{grid-column:1/-1}.grpsel.full{grid-column:1/-1}
+.it3{padding:8px 0;border-bottom:1px solid var(--bd)}.it3:last-child{border:0}.sr{display:flex;gap:6px;margin:6px 0 0 28px;flex-wrap:wrap;align-items:center}.sr input[type=number]{width:64px}.sr input.sq{flex:1;min-width:90px}
+.er{display:flex;gap:4px;align-items:center;margin:6px 0}.er .en{flex:1;min-width:0}.er .ec,.rw .ec{width:48px;padding:8px 4px;flex:none}.er .es{width:70px;padding:8px 2px;flex:none}
+.er.add .ghost{flex:none}.mrow{margin:0 0 6px}.mrow input{width:100%}.mrow .ghost{margin-top:4px}
+.mb,.bk{flex:none;border:1px solid var(--bd);background:var(--card);border-radius:8px;padding:4px 6px;font-size:14px;cursor:pointer;opacity:.55;line-height:1.2}
+.mb.on,.bk.on,.bk:has(input:checked){opacity:1;background:var(--ac2);border-color:var(--ac)}.bk input{display:none}
+.rw{display:flex;align-items:center;gap:6px;padding:8px 0;border-bottom:1px solid var(--bd)}.rw:last-child{border:0}.rw .en{flex:1;min-width:0}.rw select{max-width:112px;flex:none;padding:7px 4px}
+.cl{display:flex;align-items:center;gap:8px}.cl .lnk{flex:1;min-width:0}
 </style></head><body><main>
 <h1>⛺ 오토캠핑 체크리스트</h1>
 <p class="sub">필요한 물품을 적고 → 가정별로 체크하고 → 부족한 건 구매/생략을 정하면 → 가정별 체크리스트가 만들어져요.</p>
@@ -63,7 +70,7 @@ details{border-bottom:1px solid var(--bd);padding:6px 0}summary{cursor:pointer;p
 </main>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import {getFirestore,doc,collection,setDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,FieldPath} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {getFirestore,doc,collection,setDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,FieldPath,getDocs} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 // ▼▼▼ Firebase 콘솔에서 복사한 설정값을 여기에 붙여 넣으세요 ▼▼▼
 const FIREBASE_CONFIG={
   apiKey:'AIzaSyBGOsIorRqtXy13yAhcqA-Z2RifgBWPDe8',
@@ -81,7 +88,7 @@ set:function(d){return setDoc(r,d)},delete:function(){return deleteDoc(r)},
 update:function(d){var a=[];Object.keys(d).forEach(function(k){var v=d[k];if(isObj(v)&&Object.keys(v).length)Object.keys(v).forEach(function(x){a.push(new FieldPath(k,x),v[x])});else a.push(k,v)});return updateDoc(r,...a)},
 onSnapshot:function(f,e){return onSnapshot(r,function(s){f({exists:s.exists(),data:function(){return s.data()},id:s.id})},e)},
 collection:function(p){return wrapCol(collection(r,p))}}}
-function wrapCol(c){return{doc:function(id){return wrapDoc(id?doc(c,id):doc(c))},orderBy:function(f,d){return{onSnapshot:function(cb,e){return onSnapshot(query(c,orderBy(f,d||'asc')),cb,e)}}}}}
+function wrapCol(c){return{get:function(){return getDocs(c).then(function(s){return s.docs.map(function(d){return d.id})})},doc:function(id){return wrapDoc(id?doc(c,id):doc(c))},orderBy:function(f,d){return{onSnapshot:function(cb,e){return onSnapshot(query(c,orderBy(f,d||'asc')),cb,e)}}}}}
 var D=`H|숙영|텐트(팩·폴 포함)
 H|숙영|그라운드시트
 H|숙영|팩 망치
@@ -262,71 +269,97 @@ function dl(d){if(!camp.start)return'';var t=new Date(camp.start+'T00:00:00');t.
 var dz=function(m){return m.dishes||[{id:'d0',name:m.menu||'',types:m.types||[],ings:m.ings||[]}]};
 var ent=function(x){return Object.assign({c:1,sc:'C',q:'',g:''},x)};
 var bg=function(x,id){return((x.bring||{})[id])||0};
-var gs=function(){return camp.groups||[]},gname=function(id){var g=gs().filter(function(y){return y.id==id})[0];return g?g.name:'항상'};
-var gopts=function(sel){return opts([['','항상 쓰는 것']].concat(gs().map(function(g){return[g.id,g.name]})),sel||'')};
-var order=function(){return['항상'].concat(gs().filter(function(g){return g.pos!='after'}).map(function(g){return g.name})).concat(meals.filter(function(x){return x.day}).map(ml)).concat(gs().filter(function(g){return g.pos=='after'}).map(function(g){return g.name}))};
+var bgn=function(x,n){var b=x.bring||{};if(b[n.k]!=null)return b[n.k];var v=(n.ids||[]).map(function(i){return b[i]||0}).filter(function(z){return z>0});if(!v.length)return 0;var t=n.kk=='재료'?v.reduce(function(a,y){return a+y},0):Math.max.apply(null,v);return Math.min(t,n.c)};
+var decOf=function(dec,it,hid){var k=hid?it.k+'_'+hid:it.k;if(dec[k]!=null)return dec[k];var a=(it.ids||[]).map(function(i){return dec[hid?i+'_'+hid:i]}).filter(Boolean);return a[0]||''};
+var gname=function(){return'항상'};
+var order=function(){return['항상'].concat(meals.filter(function(x){return x.day}).map(ml))};
 function grp(list,f){return order().map(function(u){return[u,list.filter(function(e){return f(e)==u})]}).filter(function(e){return e[1].length})}
 var gh=function(u){return u=='항상'?'📦 항상 쓰는 것':/^\d+일차 /.test(u)?'🕒 '+u:'📦 '+u};
-function allItems(){var a=[];meals.forEach(function(m){dz(m).forEach(function(d){['ings','gear'].forEach(function(l){(d[l]||[]).forEach(function(e){e=ent(e);if(l=='ings'&&e.buy)return;a.push({id:e.id,n:e.n,q:e.q,c:Math.max(1,+e.c||1),sc:e.sc,kind:l=='ings'?'재료':'장비',w:m.day?ml(m):gname(e.g),dn:d.name||''})})})})});return a}
-function shorts(){var r=[],dec=camp.dec||{};if(!hhs.length)return r;allItems().forEach(function(it){if(it.sc=='C'){var t=hhs.reduce(function(a,x){return a+bg(x,it.id)},0);if(t<it.c)r.push({it:it,hid:null,short:it.c-t,key:it.id,dec:dec[it.id]||''})}else hhs.forEach(function(x){var b=bg(x,it.id);if(b<it.c){var k=it.id+'_'+x.id;r.push({it:it,hid:x.id,hn:x.name,short:it.c-b,key:k,dec:dec[k]||''})}})});return r}
+function allItems(){var a=[];meals.forEach(function(m){dz(m).forEach(function(d){['ings','gear'].forEach(function(l){(d[l]||[]).forEach(function(e){e=ent(e);if(e.buy)return;a.push({id:e.id,n:e.n,q:e.q,c:Math.max(1,+e.c||1),sc:e.sc,kind:!m.day?'물품':(l=='ings'?'재료':'장비'),kk:l=='ings'?'재료':'장비',w:m.day?ml(m):gname(e.g),dn:d.name||''})})})})});return a}
+function needsM(){var m={},ks=[];allItems().forEach(function(it){var nk=it.n.replace(/\s/g,'').toLowerCase(),k=encodeURIComponent(it.kk+'|'+it.sc+'|'+nk).replace(/\./g,'%2E');if(!m[k]){m[k]={k:k,id:k,n:it.n,kind:it.kind,kk:it.kk,sc:it.sc,c:0,w:it.w,ws:[],qs:[],dn:'',ids:[]};ks.push(k)}var e=m[k];e.ids.push(it.id);e.c=it.kk=='장비'?Math.max(e.c,it.c):e.c+it.c;var w=it.w+(it.dn?' '+it.dn:'');if(e.ws.indexOf(w)<0)e.ws.push(w);if(it.q&&e.qs.indexOf(it.q)<0)e.qs.push(it.q)});return ks.map(function(k){var e=m[k];e.q=e.qs.join(' · ');return e})}
+function shorts(){var r=[],dec=camp.dec||{};if(!hhs.length)return r;needsM().forEach(function(it){if(it.sc=='C'){var t=hhs.reduce(function(a,x){return a+bgn(x,it)},0);if(t<it.c)r.push({it:it,hid:null,short:it.c-t,key:it.id,dec:decOf(dec,it,null)})}else hhs.forEach(function(x){var b=bgn(x,it);if(b<it.c){var k=it.id+'_'+x.id;r.push({it:it,hid:x.id,hn:x.name,short:it.c-b,key:k,dec:decOf(dec,it,x.id)})}})});return r}
 function step(a,k,v){return '<div class="num sm"><button data-a="'+a+'" data-k="'+h(k)+'" data-d="-1">−</button><b>'+v+'</b><button data-a="'+a+'" data-k="'+h(k)+'" data-d="1">+</button></div>'}
 function opts(arr,sel){return arr.map(function(a){return '<option value="'+a[0]+'" '+(a[0]==sel?'selected':'')+'>'+h(a[1])+'</option>'}).join('')}
 function selMe(){var m=me();return '<div class="row"><span>내 가정</span><select data-c="me">'+opts(hhs.map(function(x){return[x.id,x.name]}),m&&m.id)+'</select></div>'}
 var noHH='<div class="card">먼저 ① 계획 탭에서 가정을 등록해 주세요.</div>';
-function vList(){var o='<div class="card"><h2>새 캠핑 만들기</h2><div class="row"><span>이름</span><input type="text" id="nn" placeholder="예: 11월 가을캠핑"></div><div class="row"><span>장소</span><input type="text" id="np" placeholder="캠핑장 이름"></div><div class="row"><span>출발일</span><input type="date" id="ns"></div><div class="row"><span>몇 박</span><input type="number" id="nd" value="1" min="1" max="10" style="width:80px"></div><div class="row"><span>계절</span><select id="se">'+opts(SEAS.map(function(s){return[s,s]}),'가을')+'</select></div><div class="row"><span>사이트</span><select id="pw"><option value="1">전기 O</option><option value="0">전기 X</option></select></div><button class="big" data-a="create">만들기</button><div class="nt" style="margin-top:6px">끼니 칸은 박수에 맞춰 자동으로 만들어져요. (박수는 만든 뒤 바꿀 수 없어요)</div></div>';
+var nightOpts=function(sel){var a=[];for(var i=1;i<=10;i++)a.push([String(i),i+'박 '+(i+1)+'일']);return opts(a,String(sel))};
+function vList(){var o='<div class="card"><h2>새 캠핑 만들기</h2><div class="row"><span>이름</span><input type="text" id="nn" placeholder="예: 11월 가을캠핑"></div><div class="row"><span>장소</span><input type="text" id="np" placeholder="캠핑장 이름"></div><div class="row"><span>출발일</span><input type="date" id="ns"></div><div class="row"><span>몇 박</span><select id="nd">'+nightOpts(1)+'</select></div><div class="row"><span>계절</span><select id="se">'+opts(SEAS.map(function(s){return[s,s]}),'가을')+'</select></div><div class="row"><span>사이트</span><select id="pw"><option value="1">전기 O</option><option value="0">전기 X</option></select></div><button class="big" data-a="create">만들기</button><div class="nt" style="margin-top:6px">끼니 칸은 박수에 맞춰 자동으로 만들어져요. (박수는 ① 계획에서 나중에 바꿀 수 있어요)</div></div>';
 o+='<div class="sec">우리 캠핑 목록</div>';if(!listReady)return o+'<p class="nt">불러오는 중…</p>';
-return o+(camps.length?camps.map(function(c){return '<a class="card lnk" href="#c-'+c.id+'"><b>'+h(c.name)+'</b><div class="nt">'+h(c.place||'장소 미정')+' · '+c.nights+'박'+(c.start?' · '+c.start:'')+'</div></a>'}).join(''):'<p class="nt">아직 만든 캠핑이 없어요.</p>')}
+return o+(camps.length?camps.map(function(c){return '<div class="card cl"><a class="lnk" href="#c-'+c.id+'"><b>'+h(c.name)+'</b><div class="nt">'+h(c.place||'장소 미정')+' · '+c.nights+'박'+(c.start?' · '+c.start:'')+'</div></a><button class="x" data-a="campdel" data-id="'+c.id+'" data-n="'+h(c.name)+'" title="삭제">🗑</button></div>'}).join(''):'<p class="nt">아직 만든 캠핑이 없어요.</p>')}
+async function delCamp(id,name){if(!confirm('"'+name+'" 캠핑을 삭제할까요?\n입력한 모든 내용이 사라지고 되돌릴 수 없어요.'))return;
+try{for(var q of ['hh','meals']){var ids=await db.collection('camps/'+id+'/'+q).get();for(var i=0;i<ids.length;i++)await db.doc('camps/'+id+'/'+q+'/'+ids[i]).delete()}await db.doc('camps/'+id).delete()}catch(e){err='삭제하지 못했어요: '+e.message;rr()}}
+async function setNights(nt){if(nt==camp.nights)return;
+var slots=function(n){var a=[];for(var d=1;d<=n+1;d++){(d==1?['저녁']:d==n+1?['아침','점심']:['아침','점심','저녁']).forEach(function(x){a.push(d+'|'+x)})}return a},want=slots(nt),have={};
+meals.forEach(function(m){if(m.day)have[m.day+'|'+m.slot]=m});
+var drop=Object.keys(have).filter(function(k){return want.indexOf(k)<0}),filled=drop.filter(function(k){return dz(have[k]).some(function(d){return d.name||(d.ings||[]).length||(d.gear||[]).length})});
+if(filled.length&&!confirm(filled.map(function(k){return k.split('|')[0]+'일차 '+k.split('|')[1]}).join(', ')+'에 입력한 내용이 있어요.\n박수를 줄이면 이 끼니와 입력 내용이 삭제돼요. 계속할까요?')){render();return}
+try{await cref().update({nights:nt});
+for(var i=0;i<want.length;i++){var k=want[i];if(!have[k]){var pp=k.split('|');await db.collection('camps/'+CID+'/meals').doc().set({day:+pp[0],slot:pp[1],dishes:[{id:u4(),name:'',types:[],ings:[],gear:[]}],ord:+pp[0]*10+['아침','점심','저녁'].indexOf(pp[1])})}}
+for(var j=0;j<drop.length;j++)await mref(have[drop[j]].id).delete()}catch(e){err='박수를 바꾸지 못했어요: '+e.message;rr()}}
 async function create(){var nt=Math.max(1,Math.min(10,+val('nd')||1)),id='k'+Date.now().toString(36)+u4(),r=db.doc('camps/'+id);
 try{await r.set({name:val('nn')||'새 캠핑',place:val('np'),start:val('ns'),nights:nt,season:val('se'),power:val('pw')=='1',dec:{},ord:Date.now()});
 for(var d=1;d<=nt+1;d++){var sl=d==1?['저녁']:d==nt+1?['아침','점심']:['아침','점심','저녁'];for(var i=0;i<sl.length;i++)await r.collection('meals').doc().set({day:d,slot:sl[i],dishes:[{id:u4(),name:'',types:[],ings:[],gear:[]}],ord:d*10+['아침','점심','저녁'].indexOf(sl[i])})}
 await r.collection('meals').doc('common').set({day:0,slot:'공통',ord:-1,dishes:[{id:'c0',name:'',types:[],ings:[],gear:[]}]});
 location.hash='c-'+id}catch(e){err='만들지 못했어요: '+e.message+' · 인터넷 연결과 Firestore 규칙을 확인해 주세요';rr()}}
 function vPlan(){var A=sum('adults'),K=sum('small');
-var o='<div class="card"><h2>⛺ 캠핑 정보</h2><div class="row"><span>이름</span><input type="text" data-c="camp" data-f="name" value="'+h(camp.name)+'"></div><div class="row"><span>장소</span><input type="text" data-c="camp" data-f="place" value="'+h(camp.place||'')+'"></div><div class="row"><span>출발일</span><input type="date" data-c="camp" data-f="start" value="'+h(camp.start||'')+'"></div><div class="row"><span>기간</span><b>'+camp.nights+'박 '+(camp.nights+1)+'일</b></div><div class="row"><span>계절</span><select data-c="camp" data-f="season">'+opts(SEAS.map(function(s){return[s,s]}),camp.season)+'</select></div><div class="row"><span>사이트</span><select data-c="camp" data-f="power">'+opts([['1','전기 O'],['0','전기 X']],camp.power?'1':'0')+'</select></div>'+
+var o='<div class="card"><h2>⛺ 캠핑 정보</h2><div class="row"><span>이름</span><input type="text" data-c="camp" data-f="name" value="'+h(camp.name)+'"></div><div class="row"><span>장소</span><input type="text" data-c="camp" data-f="place" value="'+h(camp.place||'')+'"></div><div class="row"><span>출발일</span><input type="date" data-c="camp" data-f="start" value="'+h(camp.start||'')+'"></div><div class="row"><span>몇 박</span><select data-c="nights">'+nightOpts(camp.nights)+'</select></div><div class="row"><span>계절</span><select data-c="camp" data-f="season">'+opts(SEAS.map(function(s){return[s,s]}),camp.season)+'</select></div><div class="row"><span>사이트</span><select data-c="camp" data-f="power">'+opts([['1','전기 O'],['0','전기 X']],camp.power?'1':'0')+'</select></div>'+
 '<div class="row"><input type="text" readonly value="'+h(location.href)+'"><button class="ghost" data-a="copy">링크 복사</button></div><div class="nt">같은 링크로 모임원이 들어와 함께 편집해요.</div></div>';
 o+='<div class="card"><h2>👨‍👩‍👧 참가 가정 (총 '+(A+K)+'명 · '+F(A+K/2)+'인분)</h2><div class="nt">7세 이하는 2명을 1인분으로 계산해요.</div>'+(hhs.length?hhs.map(function(x){return '<div class="hh"><input type="text" data-c="hhn" data-id="'+x.id+'" value="'+h(x.name)+'"><span class="nt">성인·8세↑</span>'+step('hh',x.id,x.adults).replace(/data-k="[^"]*"/g,'data-f="adults" data-id="'+x.id+'"')+'<span class="nt">7세↓</span>'+step('hh',x.id,x.small).replace(/data-k="[^"]*"/g,'data-f="small" data-id="'+x.id+'"')+'<button class="x" data-a="hhdel" data-id="'+x.id+'">✕</button></div>'}).join(''):'<p class="nt">참가 가정을 추가해 주세요.</p>')+
 '<h3>가정 추가</h3><div class="hh"><input type="text" id="hn" placeholder="가정 이름 (예: 민수네)"><input type="number" id="ha" value="2" min="1" style="width:60px"><input type="number" id="hs" value="0" min="0" style="width:60px"></div><div class="nt">성인·8세 이상 / 7세 이하 순서</div><button class="big" data-a="hhadd">추가</button></div>';
 return o}
-function eRows(m,d,l){var k=m.id+'-'+d.id+'-'+l,a0='data-m="'+m.id+'" data-x="'+d.id+'" data-l="'+l+'"';
-return (d[l]||[]).map(function(i){i=ent(i);var a=a0+' data-i="'+i.id+'"';return '<div class="ent"><input type="text" data-c="ent" data-f="n" '+a+' value="'+h(i.n)+'"><input type="number" min="1" data-c="ent" data-f="c" '+a+' value="'+i.c+'"><select data-c="ent" data-f="sc" '+a+'>'+opts([['C','공용'],['H','가정별']],i.sc)+'</select><button class="x" data-a="edel" '+a+'>✕</button><input type="text" class="'+(m.day&&l!='ings'?'memo':'memo2')+'" data-c="ent" data-f="q" '+a+' value="'+h(i.q||'')+'" placeholder="메모 (예: 1kg)">'+(l=='ings'?'<label class="buyck"><input type="checkbox" data-c="ent" data-f="buy" '+a+(i.buy?' checked':'')+'> 🛒 구매</label>':'')+(m.day?'':'<select class="grpsel'+(l=='ings'?' full':'')+'" data-c="ent" data-f="g" '+a+'>'+gopts(i.g)+'</select>')+'</div>'}).join('')+
-'<div class="ent add"><input type="text" id="en-'+k+'" placeholder="'+(l=='ings'?'재료 추가':'장비 추가')+'"><input type="number" min="1" id="ec-'+k+'" value="1"><select id="es-'+k+'"><option value="C">공용</option><option value="H">가정별</option></select><button class="ghost" data-a="eadd" '+a0+'>추가</button>'+(l=='ings'?'<label class="buyck full"><input type="checkbox" id="eb-'+k+'"> 🛒 구매할 재료</label>':'')+(m.day?'':'<select id="eg-'+k+'" class="grpsel">'+gopts('')+'</select>')+'</div>'}
+var memoOpen={};
+function eRows(m,d,l,noAdd){var bz=(l=='ings'||!m.day),k=m.id+'-'+d.id+'-'+l,a0='data-m="'+m.id+'" data-x="'+d.id+'" data-l="'+l+'"';
+return (d[l]||[]).map(function(i){i=ent(i);var a=a0+' data-i="'+i.id+'"';
+return '<div class="er"><input type="text" class="en" data-c="ent" data-f="n" '+a+' value="'+h(i.n)+'"><input type="number" min="1" class="ec" data-c="ent" data-f="c" '+a+' value="'+i.c+'"><select class="es" data-c="ent" data-f="sc" '+a+'>'+opts([['C','공용'],['H','가정별']],i.sc)+'</select>'+(bz?'<label class="bk'+(i.buy?' on':'')+'" title="장보기 목록에 넣기"><input type="checkbox" data-c="ent" data-f="buy" '+a+(i.buy?' checked':'')+'>🛒</label>':'')+'<button class="mb'+(i.q?' on':'')+'" data-a="memo" data-k="'+i.id+'" title="메모">📝</button><button class="x" data-a="edel" '+a+'>✕</button></div>'+(memoOpen[i.id]?'<div class="mrow"><input type="text" data-c="ent" data-f="q" '+a+' value="'+h(i.q||'')+'" placeholder="메모 (예: 1kg)"></div>':'')}).join('')+
+(noAdd?'':'<div class="er add"><input type="text" class="en" id="en-'+k+'" placeholder="'+(!m.day?'물품 추가':l=='ings'?'재료 추가':'장비 추가')+'"><input type="number" min="1" class="ec" id="ec-'+k+'" value="1"><select class="es" id="es-'+k+'"><option value="C">공용</option><option value="H">가정별</option></select>'+(bz?'<label class="bk" title="장보기 목록에 넣기"><input type="checkbox" id="eb-'+k+'">🛒</label>':'')+'<button class="ghost" data-a="eadd" '+a0+'>추가</button></div>')}
 function dishCard(m,d,multi){var o='<div class="dish">',ad='data-m="'+m.id+'" data-x="'+d.id+'"';
 if(m.day){o+='<div class="hh"><input type="text" data-c="menu" '+ad+' value="'+h(d.name||'')+'" placeholder="메뉴 이름 (예: 삼겹살)">'+(multi?'<button class="x" data-a="dishdel" '+ad+'>✕</button>':'')+'</div><div class="chips">'+MENUS.map(function(t){return '<button class="chip '+((d.types||[]).indexOf(t)>-1?'on':'')+'" data-a="type" '+ad+' data-v="'+t+'">'+t+'</button>'}).join('')+'</div><div class="nt">종류를 고르면 아래 "추천" 버튼으로 흔히 쓰는 재료·장비를 넣을 수 있어요.</div>'}
-o+='<h3>재료</h3>'+eRows(m,d,'ings')+'<h3>장비</h3>'+eRows(m,d,'gear');
+o+=m.day?'<h3>재료</h3>'+eRows(m,d,'ings')+'<h3>장비</h3>'+eRows(m,d,'gear'):eRows(m,d,'ings',true)+eRows(m,d,'gear');
 if((d.types||[]).length)o+='<div class="chips" style="margin-top:8px"><button class="ghost" data-a="sugi" '+ad+'>추천 재료 넣기</button><button class="ghost" data-a="sugg" '+ad+'>추천 장비 넣기</button></div>';
 return o+'</div>'}
-
-function grpMgr(){return '<h3>내 묶음 (사용 시기·용도별로 나누기)</h3><div class="nt">기본은 "항상 쓰는 것"이에요. 묶음을 만들면 아래 물품마다 어느 묶음에 넣을지 고를 수 있고, ③·⑤ 목록도 그 이름으로 묶여요.</div>'+gs().map(function(g){return '<div class="ent grp"><input type="text" data-c="grp" data-f="name" data-id="'+g.id+'" value="'+h(g.name)+'"><select data-c="grp" data-f="pos" data-id="'+g.id+'">'+opts([['before','식단 전'],['after','식단 후']],g.pos||'before')+'</select><button class="x" data-a="gdel" data-id="'+g.id+'">✕</button></div>'}).join('')+'<div class="ent grp add"><input type="text" id="gn-new" placeholder="묶음 이름 (예: 도착 직후, 취침 전, 철수할 때)"><select id="gp-new"><option value="before">식단 전</option><option value="after">식단 후</option></select><button class="ghost" data-a="gadd">추가</button></div><h3>물품</h3>'}
-function mealCard(m){var ds=dz(m),o='<div class="card"><h2>'+(m.day?m.slot:'공통·기타 물품 (텐트, 침낭, 의자 등 식단 밖의 모든 것)')+'</h2>'+(m.day?'':grpMgr())+ds.map(function(d){return dishCard(m,d,m.day&&ds.length>1)}).join('');
+function mealCard(m){var ds=dz(m),o='<div class="card"><h2>'+(m.day?m.slot:'공통·기타 물품 (텐트, 침낭, 의자 등 식단 밖의 모든 것)')+'</h2>'+ds.map(function(d){return dishCard(m,d,m.day&&ds.length>1)}).join('');
 if(m.day)o+='<button class="ghost" data-a="dishadd" data-m="'+m.id+'">➕ 메뉴 추가</button>';return o+'</div>'}
 function vMeals(){var o='<p class="sub">끼니마다 메뉴와 필요한 재료·장비를 적고, 맨 아래 공통·기타에 그 밖의 필요한 물품을 모두 적어 주세요. 개수는 <b>공용</b>이면 모임 전체 필요량, <b>가정별</b>이면 한 가정당 필요량이에요. 장을 봐야 하는 재료는 <b>🛒 구매</b>를 체크하면 장보기 탭에 모여요.</p>',cd=0,cm=null;meals.forEach(function(m){if(!m.day){cm=m;return}if(m.day!=cd){cd=m.day;o+='<div class="sec">'+cd+'일차'+dl(cd)+'</div>'}o+=mealCard(m)});return o+(cm?'<div class="sec">공통·기타</div>'+mealCard(cm):'')}
-function vHave(){var m=me();if(!m)return noHH;var its=allItems(),o=selMe()+'<p class="sub">② 탭에 적은 물품마다 우리 가정이 가진 개수(보유)와 가져갈 개수를 입력하세요. 없으면 0으로 두면 돼요.</p>';
-if(!its.length)return o+'<div class="card">② 필요 물품 탭에서 식단의 재료·장비와 기타 물품을 먼저 적어 주세요.</div>';
-grp(its,function(e){return e.w}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(it){var t=hhs.reduce(function(a,x){return a+bg(x,it.id)},0),nd=it.sc=='C'?'모임 필요 '+it.c+' · 현재 가져감 '+t+'/'+it.c:'우리 가정 필요 '+it.c;
-return '<div class="it2"><div><b>'+h(it.n)+'</b> <span class="q">'+it.kind+'</span> <span class="nt">'+h((it.dn?it.dn+' · ':'')+(it.q||''))+'</span><div class="nt">'+nd+'</div></div><div class="steps"><span class="nt">보유</span>'+step('own',it.id,(m.own||{})[it.id]||0)+'<span class="nt">가져감</span>'+step('bring',it.id,bg(m,it.id))+'</div></div>'}).join('')+'</div>'});
+function vHave(){var m=me();if(!m)return noHH;var N=needsM(),o=selMe()+'<p class="sub">구매하기로 한 것을 뺀 필요 물품이에요. 우리 가정이 가져올 수 있는 것에 체크하세요. 같은 물품은 하나로 합쳐서 보여줘요.</p>';
+if(!N.length)return o+'<div class="card">② 필요 물품 탭에서 식단의 재료·장비와 기타 물품을 먼저 적어 주세요.</div>';
+var cn=N.filter(function(n){return bgn(m,n)>0}).length;
+o+='<div class="card"><b>가져올 수 있는 것 '+cn+'/'+N.length+'</b></div><div class="card">'+N.map(function(n){var b=bgn(m,n),t=hhs.reduce(function(a,x){return a+bgn(x,n)},0),on=b>0,nd=n.sc=='C'?'가져감 '+t+'/'+n.c:'필요 '+n.c;
+return '<div class="rw" title="'+h(n.ws.filter(function(x){return x!='항상'}).join(', '))+'"><label class="it" style="border:0;padding:0;flex:1;min-width:0"><input type="checkbox" data-c="can" data-k="'+n.k+'" '+(on?'checked':'')+'><span><span class="n">'+h(n.n)+'</span> <span class="q">'+(n.sc=='C'?'공용':'가정별')+'</span>'+(n.q?' <span class="nt">'+h(n.q)+'</span>':'')+'</span></label><span class="nt">'+nd+'</span>'+(on?step('bring',n.k,b):'')+'</div>'}).join('')+'</div>';
 return o+'<button class="big" data-a="done">'+(m.done?'✅ 체크 완료 (눌러서 취소)':'체크 완료로 표시')+'</button>'}
 function vCoord(){if(!hhs.length)return noHH;var S2=shorts(),o='<div class="card"><h2>가정별 체크 현황</h2><div class="chips">'+hhs.map(function(x){return '<span class="chip '+(x.done?'on':'')+'">'+(x.done?'✅ ':'⏳ ')+h(x.name)+'</span>'}).join('')+'</div><div class="nt">모든 가정이 ③ 탭에서 체크 완료를 누르면 아래 부족 목록이 확정돼요.</div></div>';
 var n0=S2.filter(function(r){return !r.dec}).length,ns=S2.filter(function(r){return r.dec=='skip'}).length;
 o+='<div class="card"><b>부족 '+S2.length+'건</b> · 미정 '+n0+' · 구매 '+(S2.length-n0-ns)+' · 없이 진행 '+ns+'</div>';
 if(!S2.length)return o+'<div class="card">부족한 물품이 없어요 🎉</div>';
-grp(S2,function(r){return r.it.w}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(r){var op=r.hid?[['','미정'],['buy','구매'],['skip','없이 진행']]:[['','미정'],['skip','없이 진행']].concat(hhs.map(function(x){return['buy:'+x.id,'구매 - '+x.name]}));
-return '<div class="it2"><div><b>'+h(r.it.n)+'</b> <span class="q">'+r.it.kind+'</span> <span class="buy">'+(r.hid?h(r.hn)+' ':'')+'부족 '+r.short+'개</span><div class="nt">'+h(r.it.dn||'')+'</div></div><select data-c="dec" data-k="'+r.key+'">'+opts(op,r.dec)+'</select></div>'}).join('')+'</div>'});
-return o}
+return o+'<div class="card">'+S2.map(function(r){var op=r.hid?[['','미정'],['buy','구매'],['skip','없이 진행']]:[['','미정'],['skip','없이 진행']].concat(hhs.map(function(x){return['buy:'+x.id,'구매 - '+x.name]}));
+return '<div class="rw" title="'+h(r.it.ws.filter(function(x){return x!='항상'}).join(', '))+'"><div style="flex:1;min-width:0"><b>'+h(r.it.n)+'</b> <span class="q">'+(r.it.sc=='C'?'공용':'가정별')+'</span> <span class="buy">'+(r.hid?h(r.hn)+' ':'')+'부족 '+r.short+'</span></div><select data-c="dec" data-k="'+r.key+'">'+opts(op,r.dec)+'</select></div>'}).join('')+'</div>'}
 function vCheck(){var m=me();if(!m)return noHH;var E=[],skip=[],un=[];
-allItems().forEach(function(it){var b=bg(m,it.id);if(b>0)E.push({u:it.w,t:it.n,k:it.kind,x:(it.dn?it.dn+' · ':'')+'×'+b+(it.q?' · '+it.q:''),key:'b_'+it.id})});
-shopList().forEach(function(x){if((camp.shop||{})[x.id]==m.id)E.push({u:x.w,t:x.n,k:'재료',x:'🛒 장보기 ×'+x.c+(x.q?' · '+x.q:''),key:'p_'+x.id})});
-shorts().forEach(function(r){if(r.hid&&r.hid!=m.id)return;var lb=r.it.w+(r.it.dn?' '+r.it.dn:'')+': '+r.it.n+' '+r.short+'개';
+needsM().forEach(function(it){var b=bgn(m,it);if(b>0)E.push({u:it.w,t:it.n,k:it.kind,x:'×'+b+(it.q?' · '+it.q:'')+(it.ws.length>1?' · 사용: '+it.ws.join(', '):''),key:'b_'+it.k})});
+var SE=[];shopRows().forEach(function(r){if(r.ids.some(function(i){return (camp.shop||{})[i]==m.id}))SE.push({t:r.n,x:'×'+r.c+(r.q?' · '+r.q:''),key:'p_'+r.k})});extras().forEach(function(x){if((camp.shop||{})[x.id]==m.id)SE.push({t:x.n,x:'×'+x.c+(x.q?' · '+x.q:''),key:'p_'+x.id})});
+shorts().forEach(function(r){if(r.hid&&r.hid!=m.id)return;var lb=r.it.n+' '+r.short+'개';
 if(r.dec=='skip')skip.push(lb);else if(!r.dec)un.push(lb);else if(r.dec=='buy'||r.dec=='buy:'+m.id)E.push({u:r.it.w,t:r.it.n,k:r.it.kind,x:'🛒 구매 ×'+r.short,key:'y_'+r.key})});
-var tot=E.length,dn=E.filter(function(e){return (m.packed||{})[e.key]}).length,pc=tot?Math.round(dn/tot*100):0;
+var tot=E.length+SE.length,dn=E.concat(SE).filter(function(e){return (m.packed||{})[e.key]}).length,pc=tot?Math.round(dn/tot*100):0;
 var o=selMe()+'<div class="card"><b>'+h(m.name)+' 체크리스트 ('+dn+'/'+tot+')</b><div class="bar"><i style="width:'+pc+'%"></i></div><div class="nt">사용 시기별로 묶어서 챙기면 짐을 풀기 편해요.</div></div>';
-grp(E,function(e){return e.u}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="q">'+e.k+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>'});
+if(SE.length)o+='<div class="card"><h2>🛒 내가 장볼 것</h2>'+SE.map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>';
+grp(E,function(e){return e.u}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>'});
 function lst(t,a,c){return '<div class="card"><h2 class="'+(c||'')+'">'+t+' ('+a.length+')</h2>'+(a.length?a.map(function(x){return '<div class="it"><span>• '+h(x)+'</span></div>'}).join(''):'<p class="nt">없어요 👍</p>')+'</div>'}
 return o+(tot?'':'<div class="card"><p class="nt">③ 탭에서 가져갈 개수를 입력하면 여기에 나타나요.</p></div>')+lst('없이 진행하기로 한 것',skip)+lst('아직 결정 안 된 부족 물품 (④ 탭에서 정해 주세요)',un,'buy')}
-function shopList(){var a=[];meals.forEach(function(m){dz(m).forEach(function(d){(d.ings||[]).forEach(function(e){e=ent(e);if(e.buy)a.push({id:e.id,n:e.n,q:e.q,c:Math.max(1,+e.c||1),w:m.day?ml(m):gname(e.g),dn:d.name||''})})})});return a}
-function vShop(){var L=shopList(),bt=camp.bought||{},sh=camp.shop||{},dn=L.filter(function(x){return bt[x.id]}).length;
-var o='<div class="card"><b>🛒 장볼 리스트 ('+dn+'/'+L.length+')</b><div class="bar"><i style="width:'+(L.length?Math.round(dn/L.length*100):0)+'%"></i></div><div class="nt">② 필요 물품에서 재료의 "🛒 구매"를 체크하면 여기에 나타나요. 장보면서 체크하면 모두에게 공유돼요.</div></div>';
-if(!L.length)return o+'<div class="card"><p class="nt">아직 구매할 재료가 없어요.</p></div>';
-grp(L,function(e){return e.w}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(x){return '<div class="it2"><label class="it'+(bt[x.id]?' done':'')+'" style="border:0;flex:1;min-width:150px"><input type="checkbox" data-c="bought" data-k="'+x.id+'" '+(bt[x.id]?'checked':'')+'><span><span class="n">'+h(x.n)+'</span> <span class="nt">'+h((x.dn?x.dn+' · ':'')+'×'+x.c+(x.q?' · '+x.q:''))+'</span></span></label><select data-c="shop" data-k="'+x.id+'">'+opts([['','장볼 사람 미정']].concat(hhs.map(function(y){return[y.id,y.name]})),sh[x.id]||'')+'</select></div>'}).join('')+'</div>'});
+function shopList(){var a=[];meals.forEach(function(m){dz(m).forEach(function(d){(d.ings||[]).concat(m.day?[]:(d.gear||[])).forEach(function(e){e=ent(e);if(e.buy)a.push({id:e.id,n:e.n,q:e.q,c:Math.max(1,+e.c||1),w:m.day?ml(m):gname(e.g),dn:d.name||''})})})});return a}
+var shopMode=0;
+function shopMerged(L){var m={},ks=[];L.forEach(function(x){var k=x.n.replace(/\s/g,'').toLowerCase();if(!m[k]){m[k]={k:encodeURIComponent(k).replace(/\./g,'%2E'),n:x.n,c:0,qs:[],ws:[],ids:[]};ks.push(k)}var e=m[k];e.c+=x.c;e.ids.push(x.id);if(x.q&&e.qs.indexOf(x.q)<0)e.qs.push(x.q);var w=x.w+(x.dn?' '+x.dn:'');if(e.ws.indexOf(w)<0)e.ws.push(w)});return ks.map(function(k){return m[k]})}
+var extras=function(){return camp.extras||[]};
+function shopRows(){var sc=camp.shopC||{},sq=camp.shopQ||{};return shopMerged(shopList()).map(function(e){var c=sc[e.k],q=sq[e.k],qa=e.qs.join(' · ');return{k:e.k,n:e.n,c:c!=null?c:e.c,auto:e.c,q:q!=null?q:qa,qa:qa,ec:c!=null,eq:q!=null,sub:e.ws.join(', '),ids:e.ids}})}
+function vShop(){var L=shopList(),bt=camp.bought||{},sh=camp.shop||{},M=shopMode==0,X=extras(),
+U=M?shopRows():L.map(function(x){return{n:x.n,c:x.c,q:x.q,sub:x.dn,ids:[x.id],w:x.w}}),
+dn=U.filter(function(u){return u.ids.every(function(i){return bt[i]})}).length+X.filter(function(x){return bt[x.id]}).length,tot=U.length+X.length;
+var who=function(ids){var w0=sh[ids[0]]||'',same=ids.every(function(i){return (sh[i]||'')==w0});return same?w0:''};
+var shopSel=function(ids){return '<select data-c="shop" data-ids="'+ids.join(',')+'">'+opts([['','담당 미정']].concat(hhs.map(function(y){return[y.id,y.name]})),who(ids))+'</select>'};
+var o='<div class="card"><b>🛒 장볼 리스트 ('+dn+'/'+tot+')</b><div class="bar"><i style="width:'+(tot?Math.round(dn/tot*100):0)+'%"></i></div><div class="chips"><button class="chip '+(M?'on':'')+'" data-a="shopmode" data-v="0">합쳐서 보기</button><button class="chip '+(M?'':'on')+'" data-a="shopmode" data-v="1">끼니별로 보기</button></div><div class="nt" style="margin-top:6px">② 필요 물품에서 🛒를 체크하면 여기에 나타나요. 같은 것은 합쳐서 보여주고 개수는 직접 고칠 수 있어요. 📝를 누르면 메모를 쓸 수 있어요.</div></div>';
+o+='<div class="card"><h2>➕ 직접 추가</h2><div class="er add"><input type="text" class="en" id="xn" placeholder="항목 이름 (예: 휴지, 라면)"><input type="number" min="1" class="ec" id="xc" value="1"><button class="ghost" data-a="xadd">추가</button></div></div>';
+function rowRO(u){var all=u.ids.every(function(i){return bt[i]}),ids=u.ids.join(',');return '<div class="rw" title="'+h(u.sub||'')+'"><label class="it'+(all?' done':'')+'" style="border:0;padding:0;flex:1;min-width:0"><input type="checkbox" data-c="bought" data-ids="'+ids+'" '+(all?'checked':'')+'><span><span class="n">'+h(u.n)+'</span> <span class="nt">×'+u.c+(u.q?' · '+h(u.q):'')+'</span></span></label>'+shopSel(u.ids)+'</div>'}
+function rowM(u){var all=u.ids.every(function(i){return bt[i]}),ids=u.ids.join(','),mk2='s'+u.k,ed=u.ec||u.eq;return '<div class="rw"><label class="it'+(all?' done':'')+'" style="border:0;padding:0;flex:1;min-width:0"><input type="checkbox" data-c="bought" data-ids="'+ids+'" '+(all?'checked':'')+'><span class="n">'+h(u.n)+'</span></label><span class="nt">×</span><input type="number" min="0" class="ec" data-c="shopc" data-key="'+u.k+'" data-auto="'+u.auto+'" value="'+u.c+'">'+shopSel(u.ids)+'<button class="mb'+((u.q||ed)?' on':'')+'" data-a="memo" data-k="'+mk2+'" title="메모">📝</button></div>'+(memoOpen[mk2]?'<div class="mrow"><input type="text" data-c="shopq" data-key="'+u.k+'" data-auto="'+h(u.qa)+'" value="'+h(u.q)+'" placeholder="메모">'+(ed?'<button class="ghost" data-a="shopreset" data-key="'+u.k+'">↺ 자동값</button>':'')+(u.ec&&u.c!=u.auto?'<div class="nt">자동 합계 ×'+u.auto+' → 직접 수정함</div>':'')+(u.sub?'<div class="nt">쓰는 곳: '+h(u.sub)+'</div>':'')+'</div>':'')}
+if(M)o+=U.length?'<div class="card">'+U.map(rowM).join('')+'</div>':'';else grp(U,function(u){return u.w}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(rowRO).join('')+'</div>'});
+if(!U.length&&!X.length)o+='<div class="card"><p class="nt">아직 장볼 항목이 없어요. ②에서 🛒를 체크하거나 위에서 직접 추가해 보세요.</p></div>';
+if(X.length)o+='<div class="card"><h2>➕ 직접 추가한 항목</h2>'+X.map(function(x){return '<div class="rw"><input type="checkbox" data-c="bought" data-ids="'+x.id+'" '+(bt[x.id]?'checked':'')+'><input type="text" class="en" data-c="xtra" data-f="n" data-id="'+x.id+'" value="'+h(x.n)+'"><span class="nt">×</span><input type="number" min="1" class="ec" data-c="xtra" data-f="c" data-id="'+x.id+'" value="'+x.c+'">'+shopSel([x.id])+'<button class="mb'+(x.q?' on':'')+'" data-a="memo" data-k="'+x.id+'" title="메모">📝</button><button class="x" data-a="xdel" data-id="'+x.id+'">✕</button></div>'+(memoOpen[x.id]?'<div class="mrow"><input type="text" data-c="xtra" data-f="q" data-id="'+x.id+'" value="'+h(x.q||'')+'" placeholder="메모"></div>':'')}).join('')+'</div>';
 return o+'<button class="ghost" data-a="copyshop">남은 장보기 목록 복사</button>'}
 function render(){T.innerHTML='';var o='';
 if(db===undefined){V.innerHTML='<p class="sub">연결 중…</p>';return}
@@ -341,19 +374,26 @@ function rr(){var a=document.activeElement;if(a&&V.contains(a)&&/INPUT|SELECT/.t
 function mealOf(id){return meals.filter(function(y){return y.id==id})[0]}
 function act(e){var b=e.target.closest('[data-a]');if(!b||!db)return;var d=b.dataset,a=d.a,m,x,r;
 if(a=='tab'){tab=+d.v;render();window.scrollTo(0,0)}
+else if(a=='memo'){memoOpen[d.k]=!memoOpen[d.k];render()}
+else if(a=='campdel'){delCamp(d.id,d.n)}
 else if(a=='create')create();
 else if(a=='copy'){try{navigator.clipboard.writeText(location.href)}catch(z){}b.textContent='복사됨'}
 else if(a=='hhadd'){r=db.collection('camps/'+CID+'/hh').doc();qq(r,function(){return r.set({name:val('hn')||'우리 가정',adults:Math.max(1,+val('ha')||2),small:Math.max(0,+val('hs')||0),own:{},bring:{},packed:{},done:false,ord:Date.now()})})}
 else if(a=='hh'){x=hhs.filter(function(y){return y.id==d.id})[0];var u={};u[d.f]=Math.max(d.f=='adults'?1:0,Math.min(30,(x[d.f]||0)+ +d.d));upd(href(d.id),u)}
 else if(a=='hhdel'){if(confirm('이 가정을 삭제할까요?')){r=href(d.id);qq(r,function(){return r.delete()})}}
-else if(a=='own'||a=='bring'){x=me();var o2={},c=((x[a]||{})[d.k])||0;o2[d.k]=Math.max(0,Math.min(99,c+ +d.d));var w={};w[a]=o2;upd(href(x.id),w)}
+else if(a=='own'||a=='bring'){x=me();var o2={},nz=needsM().filter(function(z){return z.k==d.k})[0],c=a=='bring'&&nz?bgn(x,nz):(((x[a]||{})[d.k])||0);o2[d.k]=Math.max(0,Math.min(99,c+ +d.d));var w={};w[a]=o2;upd(href(x.id),w)}
 else if(a=='done'){x=me();upd(href(x.id),{done:!x.done})}
-else if(a=='copyshop'){var L=shopList(),bt=camp.bought||{},t='';grp(L,function(e){return e.w}).forEach(function(g){var ls=g[1].filter(function(x){return !bt[x.id]}).map(function(x){return '- '+x.n+' ×'+x.c+(x.q?' ('+x.q+')':'')});if(ls.length)t+='['+g[0]+']\n'+ls.join('\n')+'\n'});try{navigator.clipboard.writeText(t.trim())}catch(z){}b.textContent='복사됨'}
-else if(a=='gadd'){var gn=val('gn-new');if(!gn)return;upd(cref(),{groups:(camp.groups||[]).concat([{id:u4(),name:gn,pos:val('gp-new')||'before'}])})}
-else if(a=='gdel'){upd(cref(),{groups:(camp.groups||[]).filter(function(g){return g.id!=d.id})})}
+else if(a=='shopmode'){shopMode=+d.v;render()}
+else if(a=='copyshop'){var L=shopList(),bt=camp.bought||{},t='',X=extras().filter(function(x){return !bt[x.id]}).map(function(x){return '- '+x.n+' ×'+x.c+(x.q?' ('+x.q+')':'')});
+if(shopMode==0){t=shopRows().filter(function(e){return !e.ids.every(function(i){return bt[i]})}).map(function(e){return '- '+e.n+' ×'+e.c+(e.q?' ('+e.q+')':'')}).concat(X).join('\n')}
+else{grp(L,function(e){return e.w}).forEach(function(g){var ls=g[1].filter(function(x){return !bt[x.id]}).map(function(x){return '- '+x.n+' ×'+x.c+(x.q?' ('+x.q+')':'')});if(ls.length)t+='['+g[0]+']\n'+ls.join('\n')+'\n'});if(X.length)t+='[직접 추가]\n'+X.join('\n')+'\n'}
+try{navigator.clipboard.writeText(t.trim())}catch(z){}b.textContent='복사됨'}
+else if(a=='shopreset'){var r1={},r2={};r1[d.key]=null;r2[d.key]=null;upd(cref(),{shopC:r1,shopQ:r2})}
+else if(a=='xadd'){var xn=val('xn');if(!xn)return;upd(cref(),{extras:extras().concat([{id:u4(),n:xn,c:Math.max(1,+val('xc')||1),q:val('xq')}])})}
+else if(a=='xdel'){upd(cref(),{extras:extras().filter(function(x){return x.id!=d.id})})}
 else if(['type','eadd','edel','sugi','sugg','dishadd','dishdel'].indexOf(a)>-1){m=mealOf(d.m);var ds=JSON.parse(JSON.stringify(dz(m))),dd=ds.filter(function(y){return y.id==d.x})[0],l=d.l;
 if(a=='type'){dd.types=dd.types||[];var ti=dd.types.indexOf(d.v);ti>-1?dd.types.splice(ti,1):dd.types.push(d.v)}
-else if(a=='eadd'){var k=d.m+'-'+d.x+'-'+l,n=val('en-'+k);if(!n)return;dd[l]=(dd[l]||[]).concat([{id:u4(),n:n,c:Math.max(1,+val('ec-'+k)||1),sc:val('es-'+k)||'C',g:val('eg-'+k)||'',buy:l=='ings'&&!!(document.getElementById('eb-'+k)||{}).checked,q:''}])}
+else if(a=='eadd'){var k=d.m+'-'+d.x+'-'+l,n=val('en-'+k);if(!n)return;dd[l]=(dd[l]||[]).concat([{id:u4(),n:n,c:Math.max(1,+val('ec-'+k)||1),sc:val('es-'+k)||'C',g:val('eg-'+k)||'',buy:(l=='ings'||!m.day)&&!!(document.getElementById('eb-'+k)||{}).checked,q:''}])}
 else if(a=='edel')dd[l]=dd[l].filter(function(i){return i.id!=d.i});
 else if(a=='sugi'){var ex=(dd.ings||[]).map(function(i){return i.n});dd.ings=(dd.ings||[]).concat(CN.filter(function(c){return c.sc=='C'&&(dd.types||[]).indexOf(c.c)>-1&&ex.indexOf(c.n)<0}).map(function(c){return{id:u4(),n:c.n,c:1,sc:'C',q:''}}))}
 else if(a=='sugg'){var eg=(dd.gear||[]).map(function(i){return i.n}),ty=(dd.types||[]).map(function(t){return 'm:'+t});dd.gear=(dd.gear||[]).concat(G.filter(function(g){return g.k.split('&').some(function(t){return ty.indexOf(t)>-1})&&eg.indexOf(g.n)<0}).map(function(g){return{id:u4(),n:g.n,c:1,sc:g.sc,q:''}}))}
@@ -366,13 +406,19 @@ else if(c=='hhn')upd(href(t.dataset.id),{name:v.trim()||'가정'});
 else if(c=='menu'||c=='ent'){m=mealOf(t.dataset.m);var ds=JSON.parse(JSON.stringify(dz(m))),dd=ds.filter(function(y){return y.id==t.dataset.x})[0];
 if(c=='menu')dd.name=v.trim();else{var l=t.dataset.l,f2=t.dataset.f;dd[l]=(dd[l]||[]).map(function(i){if(i.id==t.dataset.i){i=Object.assign({},ent(i));i[f2]=f2=='c'?Math.max(1,Math.min(99,+v||1)):f2=='buy'?!!v:v.trim()}return i})}
 upd(mref(m.id),{dishes:ds,menu:'',types:[],ings:[]})}
-else if(c=='grp'){upd(cref(),{groups:(camp.groups||[]).map(function(g){if(g.id==t.dataset.id){g=Object.assign({},g);g[t.dataset.f]=t.dataset.f=='name'?(v.trim()||g.name):v}return g})})}
-else if(c=='bought'||c=='shop'){var o3={};o3[t.dataset.k]=v;var w3={};w3[c]=o3;upd(cref(),w3)}
+else if(c=='bought'||c=='shop'){var o3={};t.dataset.ids.split(',').forEach(function(i){o3[i]=v});var w3={};w3[c]=o3;upd(cref(),w3)}
+else if(c=='shopc'){var n1=Math.max(0,Math.min(999,+v||0)),o4={};o4[t.dataset.key]=(n1==+t.dataset.auto)?null:n1;upd(cref(),{shopC:o4})}
+else if(c=='shopq'){var o5={};o5[t.dataset.key]=(v.trim()==t.dataset.auto)?null:v.trim();upd(cref(),{shopQ:o5})}
+else if(c=='xtra'){upd(cref(),{extras:extras().map(function(x){if(x.id==t.dataset.id){x=Object.assign({},x);var f3=t.dataset.f;x[f3]=f3=='c'?Math.max(1,Math.min(999,+v||1)):(f3=='n'?(v.trim()||x.n):v.trim())}return x})})}
+else if(c=='can'){var nn=needsM().filter(function(x){return x.k==t.dataset.k})[0],mm=me();if(!nn||!mm)return;var oth=hhs.reduce(function(a,x){return a+(x.id==mm.id?0:bgn(x,nn))},0),o6={};o6[nn.k]=v?(nn.sc=='C'?Math.max(1,nn.c-oth):nn.c):0;upd(href(mm.id),{bring:o6})}
+else if(c=='nights'){setNights(+v)}
 else if(c=='dec'){var k2={};k2[t.dataset.k]=v;upd(cref(),{dec:k2})}
 else if(c=='me'){try{localStorage.setItem('cme_'+CID,v)}catch(z){}render()}
 else if(c=='pack'){var p={};p[t.dataset.k]=v;upd(href(me().id),{packed:p})}}
+var SEEDN=CN.filter(function(c){return c.sc=='C'&&c.c=='공통'}).map(function(c){return c.n}),cleaning={};
+function cleanSeed(){meals.forEach(function(m){if(m.day||cleaning[m.id])return;var ds=JSON.parse(JSON.stringify(dz(m))),ch=false;ds.forEach(function(d){var k=(d.ings||[]).filter(function(e){return !(e.c==null&&SEEDN.indexOf(e.n)>-1)});if(k.length!=(d.ings||[]).length){d.ings=k;ch=true}});if(ch){cleaning[m.id]=1;upd(mref(m.id),{dishes:ds,menu:'',types:[],ings:[]});setTimeout(function(){delete cleaning[m.id]},3000)}})}
 function route(){var m=/^#c-([A-Za-z0-9]+)$/.exec(location.hash);subs.forEach(function(f){f()});subs=[];CID=null;camp=null;hhs=[];meals=[];slow=false;
-if(m&&db){CID=m[1];tab=0;var r=db.doc('camps/'+CID);subs=[r.onSnapshot(function(s){camp=s.exists?s.data():false;rr()},eh),r.collection('hh').orderBy('ord').onSnapshot(function(s){hhs=s.docs.map(mk);rr()},eh),r.collection('meals').orderBy('ord').onSnapshot(function(s){meals=s.docs.map(mk);rr()},eh)];setTimeout(function(){if(camp===null){slow=true;rr()}},10000)}
+if(m&&db){CID=m[1];tab=0;var r=db.doc('camps/'+CID);subs=[r.onSnapshot(function(s){camp=s.exists?s.data():false;rr()},eh),r.collection('hh').orderBy('ord').onSnapshot(function(s){hhs=s.docs.map(mk);rr()},eh),r.collection('meals').orderBy('ord').onSnapshot(function(s){meals=s.docs.map(mk);cleanSeed();rr()},eh)];setTimeout(function(){if(camp===null){slow=true;rr()}},10000)}
 render();window.scrollTo(0,0)}
 V.addEventListener('click',act);T.addEventListener('click',act);V.addEventListener('change',chg);
 V.addEventListener('focusout',function(){if(pend){pend=false;setTimeout(rr,100)}});
