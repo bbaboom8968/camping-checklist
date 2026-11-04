@@ -335,17 +335,18 @@ o+='<div class="card"><b>부족 '+S2.length+'건</b> · 미정 '+n0+' · 구매 
 if(!S2.length)return o+'<div class="card">부족한 물품이 없어요 🎉</div>'+ov;
 return o+'<div class="card">'+S2.map(function(r){var op=r.hid?[['','미정'],['buy','구매'],['skip','없이 진행']]:[['','미정'],['skip','없이 진행']].concat(hhs.map(function(x){return['buy:'+x.id,'구매 - '+x.name]}));
 return '<div class="rw" title="'+h(r.it.ws.filter(function(x){return x!='항상'}).join(', '))+'"><div style="flex:1;min-width:0"><b>'+h(r.it.n)+'</b> <span class="q">'+(r.it.sc=='C'?'공용':'가정별')+'</span> <span class="buy">'+(r.hid?h(r.hn)+' ':'')+'부족 '+r.short+'</span></div><select data-c="dec" data-k="'+r.key+'">'+opts(op,r.dec)+'</select></div>'}).join('')+'</div>'+ov}
-function vCheck(){var m=me();if(!m)return noHH;var E=[],skip=[],un=[];
-needsM().forEach(function(it){var b=bgn(m,it);if(b>0)E.push({u:it.w,t:it.n,k:it.kind,x:'×'+b+(it.q?' · '+it.q:'')+(it.ws.length>1?' · 사용: '+it.ws.join(', '):''),key:'b_'+it.k})});
-var SE=[];shopRows().forEach(function(r){if(r.ids.some(function(i){return (camp.shop||{})[i]==m.id}))SE.push({t:r.n,x:'×'+r.c+(r.q?' · '+r.q:''),key:'p_'+r.k})});extras().forEach(function(x){if((camp.shop||{})[x.id]==m.id)SE.push({t:x.n,x:'×'+x.c+(x.q?' · '+x.q:''),key:'p_'+x.id})});
+function vCheck(){var m=me();if(!m)return noHH;var E=[],skip=[],un=[],ord=order(),tg=function(w){return w!='항상'?' · '+w:''};
+needsM().forEach(function(it){var b=bgn(m,it);if(b>0)E.push({u:it.w,t:it.n,x:'×'+b+(it.q?' · '+it.q:'')+tg(it.w),key:'b_'+it.k})});
+var SE=[];shopRows().forEach(function(r){if(r.ids.some(function(i){return (camp.shop||{})[i]==m.id}))SE.push({t:r.n,x:'🛒 장보기 ×'+r.c+(r.q?' · '+r.q:''),key:'p_'+r.k})});extras().forEach(function(x){if((camp.shop||{})[x.id]==m.id)SE.push({t:x.n,x:'🛒 장보기 ×'+x.c+(x.q?' · '+x.q:''),key:'p_'+x.id})});
 shorts().forEach(function(r){if(r.hid&&r.hid!=m.id)return;var lb=r.it.n+' '+r.short+'개';
-if(r.dec=='skip')skip.push(lb);else if(!r.dec)un.push(lb);else if(r.dec=='buy'||r.dec=='buy:'+m.id)E.push({u:r.it.w,t:r.it.n,k:r.it.kind,x:'🛒 구매 ×'+r.short,key:'y_'+r.key})});
-var tot=E.length+SE.length,dn=E.concat(SE).filter(function(e){return (m.packed||{})[e.key]}).length,pc=tot?Math.round(dn/tot*100):0;
-var o=selMe()+'<div class="card"><b>'+h(m.name)+' 체크리스트 ('+dn+'/'+tot+')</b><div class="bar"><i style="width:'+pc+'%"></i></div><div class="nt">사용 시기별로 묶어서 챙기면 짐을 풀기 편해요.</div></div>';
-if(SE.length)o+='<div class="card"><h2>🛒 내가 장볼 것</h2>'+SE.map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>';
-grp(E,function(e){return e.u}).forEach(function(g){o+='<div class="card"><h2>'+gh(g[0])+'</h2>'+g[1].map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>'});
-function lst(t,a,c){return '<div class="card"><h2 class="'+(c||'')+'">'+t+' ('+a.length+')</h2>'+(a.length?a.map(function(x){return '<div class="it"><span>• '+h(x)+'</span></div>'}).join(''):'<p class="nt">없어요 👍</p>')+'</div>'}
-return o+(tot?'':'<div class="card"><p class="nt">③ 탭에서 가져갈 개수를 입력하면 여기에 나타나요.</p></div>')+lst('없이 진행하기로 한 것',skip)+lst('아직 결정 안 된 부족 물품 (④ 탭에서 정해 주세요)',un,'buy')}
+if(r.dec=='skip')skip.push(lb);else if(!r.dec)un.push(lb);else if(r.dec=='buy'||r.dec=='buy:'+m.id)E.push({u:r.it.w,t:r.it.n,x:'🛒 구매 ×'+r.short+tg(r.it.w),key:'y_'+r.key})});
+E=E.map(function(e,i){return{e:e,i:i}}).sort(function(a,b){return (ord.indexOf(a.e.u)-ord.indexOf(b.e.u))||a.i-b.i}).map(function(x){return x.e});
+var all=SE.concat(E),tot=all.length,dn=all.filter(function(e){return (m.packed||{})[e.key]}).length,pc=tot?Math.round(dn/tot*100):0;
+var o=selMe()+'<div class="card"><b>'+h(m.name)+' 체크리스트 ('+dn+'/'+tot+')</b><div class="bar"><i style="width:'+pc+'%"></i></div></div>';
+o+=tot?'<div class="card">'+all.map(function(e){var on=(m.packed||{})[e.key];return '<label class="it '+(on?'done':'')+'"><input type="checkbox" data-c="pack" data-k="'+h(e.key)+'" '+(on?'checked':'')+'><span><span class="n">'+h(e.t)+'</span> <span class="nt">'+h(e.x)+'</span></span></label>'}).join('')+'</div>':'<div class="card"><p class="nt">③ 탭에서 가져갈 것을 체크하면 여기에 나타나요.</p></div>';
+function lst(t,a,c){return '<div class="card"><h2 class="'+(c||'')+'">'+t+' ('+a.length+')</h2>'+a.map(function(x){return '<div class="it"><span>• '+h(x)+'</span></div>'}).join('')+'</div>'}
+return o+(skip.length?lst('없이 진행하기로 한 것',skip):'')+(un.length?lst('아직 결정 안 된 부족 물품 (④ 탭에서 정해 주세요)',un,'buy'):'')}
+
 function shopList(){var a=[];meals.forEach(function(m){dz(m).forEach(function(d){(d.ings||[]).concat(m.day?[]:(d.gear||[])).forEach(function(e){e=ent(e);if(e.buy)a.push({id:e.id,n:e.n,q:e.q,c:Math.max(1,+e.c||1),w:m.day?ml(m):gname(e.g),dn:d.name||''})})})});return a}
 var shopMode=0;
 function shopMerged(L){var m={},ks=[];L.forEach(function(x){var k=x.n.replace(/\s/g,'').toLowerCase();if(!m[k]){m[k]={k:encodeURIComponent(k).replace(/\./g,'%2E'),n:x.n,c:0,qs:[],ws:[],ids:[]};ks.push(k)}var e=m[k];e.c+=x.c;e.ids.push(x.id);if(x.q&&e.qs.indexOf(x.q)<0)e.qs.push(x.q);var w=x.w+(x.dn?' '+x.dn:'');if(e.ws.indexOf(w)<0)e.ws.push(w)});return ks.map(function(k){return m[k]})}
